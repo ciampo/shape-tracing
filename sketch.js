@@ -23,7 +23,8 @@ export default class Sketch {
 
     this._animActive = false;
     this._animCounter = 0;
-    this._animCounterEnd = 150;
+    this._animCounterOffset = 100;
+    this._animCounterEnd = 300;
 
     this.onResize();
   }
@@ -117,15 +118,18 @@ export default class Sketch {
 
     this._ctx.fillStyle = 'rgb(30, 30, 30)';
     this._ctx.strokeStyle = `rgba(30, 30, 30, ${1})`;
-    this.shapes.forEach(s => polygon(this._ctx, progress, s));
+    this.shapes.forEach((shapeOpts, i) => {
+      const progressOffset = i * this._animCounterOffset / this._animCounterEnd;
+      polygon(this._ctx, progress - progressOffset, shapeOpts);
+    });
 
     if (this._animActive) {
       this._animCounter += 1;
 
-      if (this._animCounter > this._animCounterEnd) {
-        this._animActive = false;
-        this._animCounter = 0;
-      }
+      // if (this._animCounter > this._animCounterEnd) {
+      //   this._animActive = false;
+      //   this._animCounter = 0;
+      // }
     }
   }
 };

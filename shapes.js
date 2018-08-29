@@ -10,7 +10,7 @@ const defaultOptions = {
 }
 
 export function polygon(ctx, progress, options) {
-  if (!ctx || progress < 0 || progress > 1) {
+  if (!ctx || progress < 0) {
     return;
   }
 
@@ -28,7 +28,7 @@ export function polygon(ctx, progress, options) {
 
   const angleIncrement = Math.PI * 2 / sides * (antiClockwise ? -1 : 1);
   const sideLength = 2 * outerRadius * Math.sin(Math.PI / sides);
-  const easedProgress = easeInOutCubic(progress);
+  const easedProgress = easeInOutCubic(Math.min(1, progress));
 
   ctx.save();
   ctx.translate(Math.round(cX) + 0.5, Math.round(cY) + 0.5);
