@@ -1,0 +1,21 @@
+{
+  "name": "shape-tracing",
+  "version": "0.0.1",
+  "description": "An experiment on 2d graphics",
+  "author": "Marco Ciampini <marco.ciampo@gmail.com>",
+  "main": "index.html",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ciampo/shape-tracing.git"
+  },
+  "devDependencies": {
+    "webpack": "^2.6.0",
+    "webpack-dev-server": "^2.4.5"
+  },
+  "scripts": {
+    "start": "./node_modules/.bin/webpack-dev-server",
+    "build": "./node_modules/.bin/webpack"
+  },
+  "dependencies": {}
+}
