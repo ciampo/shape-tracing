@@ -1,5 +1,6 @@
 import { easeInOutCubic } from './easing.js';
 import { drawSquare } from './square.js';
+import { regPolyPath, polygon } from './shapes.js';
 
 export default class Sketch {
   constructor(rootEl, options = {}) {
@@ -71,11 +72,13 @@ export default class Sketch {
       progress = easeInOutCubic(this._animCounter / this._animCounterEnd);
     }
 
-    this._ctx.fillStyle = this._ctx.strokeStyle = '#555';
     const scaleFactor = 4;
     const translateX = this._viewportSize.w / 2;
     const translateY = this._viewportSize.h / 2;
-    drawSquare(this._ctx, scaleFactor, {x: translateX, y: translateY}, progress);
+    drawSquare(this._ctx, 80, scaleFactor, {x: translateX, y: translateY}, progress);
+
+    regPolyPath(200, 200, 50, 6, this._ctx);
+    polygon(this._ctx, 300, 200, 50, 6, Math.PI / 2, true);
 
     if (this._animActive) {
       this._animCounter += 1;

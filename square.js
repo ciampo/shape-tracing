@@ -1,6 +1,9 @@
-export function drawSquare(ctx, scale, translate, progress) {
+export function drawSquare(ctx, color, scale, translate, progress) {
   const size = 100;
-  const radius = (1 - progress) * 4 / scale;
+  const radius = Math.max(0, (0.8 - progress) * 4 / scale);
+
+  ctx.fillStyle = `rgb(${color}, ${color}, ${color})`;
+  ctx.strokeStyle = `rgba(${color}, ${color}, ${color}, ${Math.min(1, 1.5 * progress)})`;
 
   ctx.save();
 
