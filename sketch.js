@@ -1,6 +1,4 @@
-import { easeInOutCubic } from './easing.js';
-import { drawSquare } from './square.js';
-import { regPolyPath, polygon } from './shapes.js';
+import { polygon } from './shapes.js';
 
 export default class Sketch {
   constructor(rootEl, options = {}) {
@@ -28,6 +26,51 @@ export default class Sketch {
     this._animCounterEnd = 150;
 
     this.onResize();
+  }
+
+  get shapes() {
+    return [
+      {
+        cX: this._viewportSize.w / 2,
+        cY: this._viewportSize.h / 2,
+        outerRadius: 250,
+        sides: 3,
+        startAngle: Math.PI / 6,
+        antiClockwise: true,
+      },
+      {
+        cX: this._viewportSize.w / 2,
+        cY: this._viewportSize.h / 2,
+        outerRadius: 250,
+        sides: 4,
+        startAngle: Math.PI / 4,
+        antiClockwise: true,
+      },
+      {
+        cX: this._viewportSize.w / 2,
+        cY: this._viewportSize.h / 2,
+        outerRadius: 250,
+        sides: 5,
+      },
+      {
+        cX: this._viewportSize.w / 2,
+        cY: this._viewportSize.h / 2,
+        outerRadius: 250,
+        sides: 6,
+      },
+      {
+        cX: this._viewportSize.w / 2,
+        cY: this._viewportSize.h / 2,
+        outerRadius: 250,
+        sides: 7,
+      },
+      {
+        cX: this._viewportSize.w / 2,
+        cY: this._viewportSize.h / 2,
+        outerRadius: 250,
+        sides: 8,
+      },
+    ]
   }
 
   startDrawing() {
@@ -69,16 +112,12 @@ export default class Sketch {
 
     let progress = 0;
     if (this._animActive) {
-      progress = easeInOutCubic(this._animCounter / this._animCounterEnd);
+      progress = this._animCounter / this._animCounterEnd;
     }
 
-    const scaleFactor = 4;
-    const translateX = this._viewportSize.w / 2;
-    const translateY = this._viewportSize.h / 2;
-    drawSquare(this._ctx, 80, scaleFactor, {x: translateX, y: translateY}, progress);
-
-    regPolyPath(200, 200, 50, 6, this._ctx);
-    polygon(this._ctx, 300, 200, 50, 6, Math.PI / 2, true);
+    this._ctx.fillStyle = 'rgb(30, 30, 30)';
+    this._ctx.strokeStyle = `rgba(30, 30, 30, ${1})`;
+    this.shapes.forEach(s => polygon(this._ctx, progress, s));
 
     if (this._animActive) {
       this._animCounter += 1;

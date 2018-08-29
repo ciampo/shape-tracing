@@ -71,9 +71,7 @@
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__easing_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__square_js__ = __webpack_require__(3);
-
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__shapes_js__ = __webpack_require__(3);
 
 
 class Sketch {
@@ -102,6 +100,51 @@ class Sketch {
     this._animCounterEnd = 150;
 
     this.onResize();
+  }
+
+  get shapes() {
+    return [
+      {
+        cX: this._viewportSize.w / 2,
+        cY: this._viewportSize.h / 2,
+        outerRadius: 250,
+        sides: 3,
+        startAngle: Math.PI / 6,
+        antiClockwise: true,
+      },
+      {
+        cX: this._viewportSize.w / 2,
+        cY: this._viewportSize.h / 2,
+        outerRadius: 250,
+        sides: 4,
+        startAngle: Math.PI / 4,
+        antiClockwise: true,
+      },
+      {
+        cX: this._viewportSize.w / 2,
+        cY: this._viewportSize.h / 2,
+        outerRadius: 250,
+        sides: 5,
+      },
+      {
+        cX: this._viewportSize.w / 2,
+        cY: this._viewportSize.h / 2,
+        outerRadius: 250,
+        sides: 6,
+      },
+      {
+        cX: this._viewportSize.w / 2,
+        cY: this._viewportSize.h / 2,
+        outerRadius: 250,
+        sides: 7,
+      },
+      {
+        cX: this._viewportSize.w / 2,
+        cY: this._viewportSize.h / 2,
+        outerRadius: 250,
+        sides: 8,
+      },
+    ]
   }
 
   startDrawing() {
@@ -143,14 +186,12 @@ class Sketch {
 
     let progress = 0;
     if (this._animActive) {
-      progress = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__easing_js__["a" /* easeInOutCubic */])(this._animCounter / this._animCounterEnd);
+      progress = this._animCounter / this._animCounterEnd;
     }
 
-    this._ctx.fillStyle = this._ctx.strokeStyle = '#555';
-    const scaleFactor = 4;
-    const translateX = this._viewportSize.w / 2;
-    const translateY = this._viewportSize.h / 2;
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__square_js__["a" /* drawSquare */])(this._ctx, scaleFactor, {x: translateX, y: translateY}, progress);
+    this._ctx.fillStyle = 'rgb(30, 30, 30)';
+    this._ctx.strokeStyle = `rgba(30, 30, 30, ${1})`;
+    this.shapes.forEach(s => __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__shapes_js__["a" /* polygon */])(this._ctx, progress, s));
 
     if (this._animActive) {
       this._animCounter += 1;
@@ -286,54 +327,78 @@ function easeInOutQuint(t) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = drawSquare;
-function drawSquare(ctx, scale, translate, progress) {
-  const size = 100;
-  const radius = (1 - progress) * 4 / scale;
+/* harmony export (immutable) */ __webpack_exports__["a"] = polygon;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__easing_js__ = __webpack_require__(2);
+
+
+const defaultOptions = {
+  cX: 0,
+  cY: 0,
+  outerRadius: 50,
+  sides: 4,
+  startAngle: 0,
+  antiClockwise: false,
+}
+
+function polygon(ctx, progress, options) {
+  if (!ctx || progress < 0 || progress > 1) {
+    return;
+  }
+
+  const {
+    cX,
+    cY,
+    outerRadius,
+    sides,
+    startAngle,
+    antiClockwise,
+  } = Object.assign({}, defaultOptions, options);
+
+  // TODO: if sides 0, it's a circle!
+  if (sides < 3) return;
+
+  const angleIncrement = Math.PI * 2 / sides * (antiClockwise ? -1 : 1);
+  const sideLength = 2 * outerRadius * Math.sin(Math.PI / sides);
+  const easedProgress = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__easing_js__["a" /* easeInOutCubic */])(progress);
 
   ctx.save();
+  ctx.translate(Math.round(cX) + 0.5, Math.round(cY) + 0.5);
+  ctx.rotate(startAngle);
+  ctx.lineWidth = 1;
 
-  ctx.translate(
-    Math.round(translate.x - scale * size / 2) + 0.5,
-    Math.round(translate.y - scale * size / 2) + 0.5
-  );
-  ctx.scale(scale, scale);
-  ctx.lineWidth = 1 / scale;
+  // Draw.
+  for (let i = 1; i <= sides; i++) {
+    // P0 is where the line starts from
+    const p0 = {
+      x: outerRadius * Math.cos(angleIncrement * (i - 1)),
+      y: outerRadius * Math.sin(angleIncrement * (i - 1)),
+    };
+    // P1 is where the line goes to
+    const p1 = {
+      x: outerRadius * Math.cos(angleIncrement * i),
+      y: outerRadius * Math.sin(angleIncrement * i),
+    };
 
-  // Stroke lines
-  ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.lineTo(0, size * progress);
+    ctx.beginPath();
 
-  ctx.moveTo(0, size);
-  ctx.lineTo(size * progress, size);
+    ctx.setLineDash([sideLength * easedProgress, sideLength * (1 - easedProgress)]);
 
-  ctx.moveTo(size, size);
-  ctx.lineTo(size, size * (1 - progress));
+    ctx.moveTo(p0.x, p0.y);
+    ctx.lineTo(p1.x, p1.y);
 
-  ctx.moveTo(size, 0);
-  ctx.lineTo(size * (1 - progress), 0);
+    ctx.stroke();
 
-  ctx.closePath();
-  ctx.stroke();
+    ctx.beginPath();
 
-  // Fill circles
-  ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.arc(0, size * progress, radius, 0, Math.PI * 2, true);
+    const pDot = {
+      x: p0.x + (p1.x - p0.x) * easedProgress,
+      y: p0.y + (p1.y - p0.y) * easedProgress,
+    }
+    ctx.moveTo(pDot.x, pDot.y);
+    ctx.arc(pDot.x, pDot.y, 4 * (1 - easedProgress), 0, Math.PI * 2, false);
 
-  ctx.moveTo(0, size);
-  ctx.arc(size * progress, size, radius, 0, Math.PI * 2, true);
-
-  ctx.moveTo(size, size);
-  ctx.arc(size, size * (1 - progress), radius, 0, Math.PI * 2, true);
-
-  ctx.moveTo(size, 0);
-  ctx.arc(size * (1 - progress), 0, radius, 0, Math.PI * 2, true);
-
-  ctx.closePath();
-  ctx.fill();
-
+    ctx.fill();
+  }
   ctx.restore();
 }
 
