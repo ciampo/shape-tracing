@@ -97,7 +97,8 @@ class Sketch {
 
     this._animActive = false;
     this._animCounter = 0;
-    this._animCounterEnd = 150;
+    this._animCounterOffset = 100;
+    this._animCounterEnd = 300;
 
     this.onResize();
   }
@@ -191,15 +192,18 @@ class Sketch {
 
     this._ctx.fillStyle = 'rgb(30, 30, 30)';
     this._ctx.strokeStyle = `rgba(30, 30, 30, ${1})`;
-    this.shapes.forEach(s => __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__shapes_js__["a" /* polygon */])(this._ctx, progress, s));
+    this.shapes.forEach((shapeOpts, i) => {
+      const progressOffset = i * this._animCounterOffset / this._animCounterEnd;
+      __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__shapes_js__["a" /* polygon */])(this._ctx, progress - progressOffset, shapeOpts);
+    });
 
     if (this._animActive) {
       this._animCounter += 1;
 
-      if (this._animCounter > this._animCounterEnd) {
-        this._animActive = false;
-        this._animCounter = 0;
-      }
+      // if (this._animCounter > this._animCounterEnd) {
+      //   this._animActive = false;
+      //   this._animCounter = 0;
+      // }
     }
   }
 }
@@ -341,7 +345,7 @@ const defaultOptions = {
 }
 
 function polygon(ctx, progress, options) {
-  if (!ctx || progress < 0 || progress > 1) {
+  if (!ctx || progress < 0) {
     return;
   }
 
@@ -359,7 +363,7 @@ function polygon(ctx, progress, options) {
 
   const angleIncrement = Math.PI * 2 / sides * (antiClockwise ? -1 : 1);
   const sideLength = 2 * outerRadius * Math.sin(Math.PI / sides);
-  const easedProgress = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__easing_js__["a" /* easeInOutCubic */])(progress);
+  const easedProgress = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__easing_js__["a" /* easeInOutCubic */])(Math.min(1, progress));
 
   ctx.save();
   ctx.translate(Math.round(cX) + 0.5, Math.round(cY) + 0.5);
