@@ -30,45 +30,69 @@ export default class Sketch {
   }
 
   get shapes() {
+    const screenCenter = {
+      x: this._viewportSize.w / 2,
+      y: this._viewportSize.h / 2,
+    };
+    const outerRadius = Math.round(Math.min(screenCenter.x, screenCenter.y) * 0.9);
+
     return [
       {
-        cX: this._viewportSize.w / 2,
-        cY: this._viewportSize.h / 2,
-        outerRadius: 250,
+        cX: screenCenter.x,
+        cY: screenCenter.y,
+        outerRadius,
+        sides: 0,
+        startAngle: Math.PI,
+        antiClockwise: true,
+      },
+      {
+        cX: screenCenter.x,
+        cY: screenCenter.y,
+        outerRadius,
         sides: 3,
         startAngle: Math.PI / 6,
         antiClockwise: true,
       },
       {
-        cX: this._viewportSize.w / 2,
-        cY: this._viewportSize.h / 2,
-        outerRadius: 250,
+        cX: screenCenter.x,
+        cY: screenCenter.y,
+        outerRadius,
         sides: 4,
         startAngle: Math.PI / 4,
         antiClockwise: true,
+        // dots: [
+        //   {
+        //     from: 0,
+        //     to: 2,
+        //   },
+        //   {
+        //     from: 3,
+        //     to: 2,
+        //   }
+        // ],
       },
       {
-        cX: this._viewportSize.w / 2,
-        cY: this._viewportSize.h / 2,
-        outerRadius: 250,
+        cX: screenCenter.x,
+        cY: screenCenter.y,
+        outerRadius,
         sides: 5,
       },
       {
-        cX: this._viewportSize.w / 2,
-        cY: this._viewportSize.h / 2,
-        outerRadius: 250,
+        cX: screenCenter.x,
+        cY: screenCenter.y,
+        outerRadius,
         sides: 6,
       },
       {
-        cX: this._viewportSize.w / 2,
-        cY: this._viewportSize.h / 2,
-        outerRadius: 250,
+        cX: screenCenter.x,
+        cY: screenCenter.y,
+        outerRadius,
         sides: 7,
       },
       {
-        cX: this._viewportSize.w / 2,
-        cY: this._viewportSize.h / 2,
-        outerRadius: 250,
+        cX: screenCenter.x,
+        cY: screenCenter.y,
+        outerRadius,
         sides: 8,
       },
     ]
