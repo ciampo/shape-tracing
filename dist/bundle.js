@@ -108,32 +108,9 @@ class Sketch {
       x: this._viewportSize.w / 2,
       y: this._viewportSize.h / 2,
     };
-    const outerRadius = Math.round(Math.min(screenCenter.x, screenCenter.y) * 0.9);
+    const outerRadius = Math.round(Math.min(screenCenter.x, screenCenter.y) * 0.7);
 
     return [
-      {
-        cX: screenCenter.x,
-        cY: screenCenter.y,
-        outerRadius,
-        sides: 0,
-        startAngle: Math.PI,
-        dots: [
-          {antiClockwise: true},
-          {antiClockwise: false},
-        ],
-      },
-      {
-        cX: screenCenter.x,
-        cY: screenCenter.y,
-        outerRadius,
-        sides: 3,
-        startAngle: Math.PI / 6,
-        dots: [
-          { from: 0, direction: +1, },
-          { from: 1, direction: +1, },
-          { from: 2, direction: +1, },
-        ],
-      },
       {
         cX: screenCenter.x,
         cY: screenCenter.y,
@@ -142,22 +119,35 @@ class Sketch {
         startAngle: Math.PI / 4,
         dots: [
           { from: 0, direction: +1, },
-          { from: 4, direction: -1, },
-          { from: 2, direction: -1, },
+          { from: 1, direction: +1, },
           { from: 2, direction: +1, },
+          { from: 3, direction: +1, },
         ],
       },
       {
         cX: screenCenter.x,
         cY: screenCenter.y,
         outerRadius,
-        sides: 5,
+        sides: 8,
+        startAngle: Math.PI / 8 * 3,
+        dots: [
+          { from: 1, direction: -1, },
+          { from: 1, direction: +1, },
+          { from: 2, direction: +3, },
+          { from: 5, direction: +3, },
+        ],
+      },
+      {
+        cX: screenCenter.x,
+        cY: screenCenter.y,
+        outerRadius,
+        sides: 4,
+        startAngle: Math.PI / 2,
         dots: [
           { from: 0, direction: +1, },
-          { from: 1, direction: +1, },
-          { from: 3, direction: -1, },
-          { from: 3, direction: +1, },
-          { from: 4, direction: +1, },
+          { from: 0, direction: -1, },
+          { from: 2, direction: +1, },
+          { from: 2, direction: -1, },
         ],
       },
       {
@@ -166,26 +156,36 @@ class Sketch {
         outerRadius,
         sides: 6,
         dots: [
-          { from: 0, direction: +1, },
+          { from: 1, direction: -1, },
           { from: 1, direction: +1, },
           { from: 3, direction: -1, },
-          { from: 3, direction: +1, },
-          { from: 5, direction: -1, },
-          { from: 6, direction: -1, },
+          { from: 4, direction: -1, },
+          { from: 4, direction: +2, },
         ],
       },
-      // {
-      //   cX: screenCenter.x,
-      //   cY: screenCenter.y,
-      //   outerRadius,
-      //   sides: 7,
-      // },
-      // {
-      //   cX: screenCenter.x,
-      //   cY: screenCenter.y,
-      //   outerRadius,
-      //   sides: 8,
-      // },
+      {
+        cX: screenCenter.x,
+        cY: screenCenter.y,
+        outerRadius,
+        sides: 0,
+        startAngle: Math.PI / 2,
+        dots: [
+          {antiClockwise: true},
+        ],
+      },
+      {
+        cX: screenCenter.x,
+        cY: screenCenter.y,
+        outerRadius,
+        sides: 8,
+        startAngle: Math.PI / 8 * 3,
+        dots: [
+          { from: 2, direction: -2, },
+          { from: 2, direction: +1, },
+          { from: 3, direction: +3, },
+          { from: 6, direction: +2, },
+        ],
+      },
     ]
   }
 
@@ -382,7 +382,7 @@ const defaultOptions = {
   outerRadius: 50,
   sides: 4,
   startAngle: 0,
-  dotSize: 6,
+  dotSize: 4,
   dots: [],
 };
 
@@ -409,12 +409,19 @@ function drawShape(ctx, progress, options) {
     return;
   }
 
-  const easedProgress = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__easing_js__["a" /* easeInOutCubic */])(Math.max(0, Math.min(1, progress)));
+  let easedProgress = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__easing_js__["a" /* easeInOutCubic */])(Math.max(0, Math.min(1, progress)));
   const dotRadius = dotSize * (1 - easedProgress);
+
+  let overProgress = 0;
+  if (progress > 1) {
+    overProgress = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__easing_js__["a" /* easeInOutCubic */])(Math.max(0, Math.min(1, progress - 1)));
+  }
 
   ctx.save();
   ctx.translate(Math.round(cX), Math.round(cY));
   ctx.rotate(startAngle);
+  ctx.scale(1 + 0.5 * overProgress, 1 + 0.5 * overProgress);
+  ctx.globalAlpha = 1 - overProgress;
   ctx.lineWidth = 1;
 
   if (sides === 0) {
@@ -458,22 +465,43 @@ function drawShape(ctx, progress, options) {
         return;
       }
 
+      let sideProgress = easedProgress * Math.abs(direction);
+      let startingCorner = from;
+
+      ctx.beginPath();
+      ctx.setLineDash([]);
+      ctx.moveTo(
+        outerRadius * Math.cos(angleIncrement * startingCorner),
+        outerRadius * Math.sin(angleIncrement * startingCorner)
+      );
+      while(sideProgress > 1) {
+        ctx.lineTo(
+          outerRadius * Math.cos(angleIncrement * (startingCorner + Math.sign(direction))),
+          outerRadius * Math.sin(angleIncrement * (startingCorner + Math.sign(direction)))
+        );
+
+        sideProgress -= 1;
+        startingCorner += Math.sign(direction);
+      }
+      ctx.stroke();
+
+
       const pSideStart = {
-        x: outerRadius * Math.cos(angleIncrement * from),
-        y: outerRadius * Math.sin(angleIncrement * from),
+        x: outerRadius * Math.cos(angleIncrement * startingCorner),
+        y: outerRadius * Math.sin(angleIncrement * startingCorner),
       };
       const pSideEnd = {
-        x: outerRadius * Math.cos(angleIncrement * (from + Math.sign(direction))),
-        y: outerRadius * Math.sin(angleIncrement * (from + Math.sign(direction))),
+        x: outerRadius * Math.cos(angleIncrement * (startingCorner + Math.sign(direction))),
+        y: outerRadius * Math.sin(angleIncrement * (startingCorner + Math.sign(direction))),
       };
       const pDot = {
-        x: pSideStart.x + (pSideEnd.x - pSideStart.x) * easedProgress,
-        y: pSideStart.y + (pSideEnd.y - pSideStart.y) * easedProgress,
+        x: pSideStart.x + (pSideEnd.x - pSideStart.x) * sideProgress,
+        y: pSideStart.y + (pSideEnd.y - pSideStart.y) * sideProgress,
       };
 
       // Draw line (simulate progress through a dashed line).
       ctx.beginPath();
-      ctx.setLineDash([sideLength * easedProgress, sideLength]);
+      ctx.setLineDash([sideLength * sideProgress, sideLength]);
       ctx.moveTo(pSideStart.x, pSideStart.y);
       ctx.lineTo(pSideEnd.x, pSideEnd.y);
       ctx.stroke();
