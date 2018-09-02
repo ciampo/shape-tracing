@@ -36,9 +36,16 @@ export function drawShape(ctx, progress, options) {
   let easedProgress = easeInOutCubic(Math.max(0, Math.min(1, progress)));
   const dotRadius = dotSize * (1 - easedProgress);
 
+  let overProgress = 0;
+  if (progress > 1) {
+    overProgress = easeInOutCubic(Math.max(0, Math.min(1, progress - 1)));
+  }
+
   ctx.save();
   ctx.translate(Math.round(cX), Math.round(cY));
   ctx.rotate(startAngle);
+  ctx.scale(1 + 0.5 * overProgress, 1 + 0.5 * overProgress);
+  ctx.globalAlpha = 1 - overProgress;
   ctx.lineWidth = 1;
 
   if (sides === 0) {
