@@ -6,7 +6,7 @@ const defaultOptions = {
   outerRadius: 50,
   sides: 4,
   startAngle: 0,
-  dotSize: 6,
+  dotSize: 4,
   dots: [],
 };
 
@@ -33,7 +33,7 @@ export function drawShape(ctx, progress, options) {
     return;
   }
 
-  const easedProgress = easeInOutCubic(Math.max(0, Math.min(1, progress)));
+  let easedProgress = easeInOutCubic(Math.max(0, Math.min(1, progress)));
   const dotRadius = dotSize * (1 - easedProgress);
 
   ctx.save();
@@ -82,22 +82,43 @@ export function drawShape(ctx, progress, options) {
         return;
       }
 
+      let sideProgress = easedProgress * Math.abs(direction);
+      let startingCorner = from;
+
+      ctx.beginPath();
+      ctx.setLineDash([]);
+      ctx.moveTo(
+        outerRadius * Math.cos(angleIncrement * startingCorner),
+        outerRadius * Math.sin(angleIncrement * startingCorner)
+      );
+      while(sideProgress > 1) {
+        ctx.lineTo(
+          outerRadius * Math.cos(angleIncrement * (startingCorner + Math.sign(direction))),
+          outerRadius * Math.sin(angleIncrement * (startingCorner + Math.sign(direction)))
+        );
+
+        sideProgress -= 1;
+        startingCorner += Math.sign(direction);
+      }
+      ctx.stroke();
+
+
       const pSideStart = {
-        x: outerRadius * Math.cos(angleIncrement * from),
-        y: outerRadius * Math.sin(angleIncrement * from),
+        x: outerRadius * Math.cos(angleIncrement * startingCorner),
+        y: outerRadius * Math.sin(angleIncrement * startingCorner),
       };
       const pSideEnd = {
-        x: outerRadius * Math.cos(angleIncrement * (from + Math.sign(direction))),
-        y: outerRadius * Math.sin(angleIncrement * (from + Math.sign(direction))),
+        x: outerRadius * Math.cos(angleIncrement * (startingCorner + Math.sign(direction))),
+        y: outerRadius * Math.sin(angleIncrement * (startingCorner + Math.sign(direction))),
       };
       const pDot = {
-        x: pSideStart.x + (pSideEnd.x - pSideStart.x) * easedProgress,
-        y: pSideStart.y + (pSideEnd.y - pSideStart.y) * easedProgress,
+        x: pSideStart.x + (pSideEnd.x - pSideStart.x) * sideProgress,
+        y: pSideStart.y + (pSideEnd.y - pSideStart.y) * sideProgress,
       };
 
       // Draw line (simulate progress through a dashed line).
       ctx.beginPath();
-      ctx.setLineDash([sideLength * easedProgress, sideLength]);
+      ctx.setLineDash([sideLength * sideProgress, sideLength]);
       ctx.moveTo(pSideStart.x, pSideStart.y);
       ctx.lineTo(pSideEnd.x, pSideEnd.y);
       ctx.stroke();
