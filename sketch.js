@@ -34,32 +34,9 @@ export default class Sketch {
       x: this._viewportSize.w / 2,
       y: this._viewportSize.h / 2,
     };
-    const outerRadius = Math.round(Math.min(screenCenter.x, screenCenter.y) * 0.9);
+    const outerRadius = Math.round(Math.min(screenCenter.x, screenCenter.y) * 0.7);
 
     return [
-      {
-        cX: screenCenter.x,
-        cY: screenCenter.y,
-        outerRadius,
-        sides: 0,
-        startAngle: Math.PI,
-        dots: [
-          {antiClockwise: true},
-          {antiClockwise: false},
-        ],
-      },
-      {
-        cX: screenCenter.x,
-        cY: screenCenter.y,
-        outerRadius,
-        sides: 3,
-        startAngle: Math.PI / 6,
-        dots: [
-          { from: 0, direction: +1, },
-          { from: 1, direction: +1, },
-          { from: 2, direction: +1, },
-        ],
-      },
       {
         cX: screenCenter.x,
         cY: screenCenter.y,
@@ -68,22 +45,35 @@ export default class Sketch {
         startAngle: Math.PI / 4,
         dots: [
           { from: 0, direction: +1, },
-          { from: 4, direction: -1, },
-          { from: 2, direction: -1, },
+          { from: 1, direction: +1, },
           { from: 2, direction: +1, },
+          { from: 3, direction: +1, },
         ],
       },
       {
         cX: screenCenter.x,
         cY: screenCenter.y,
         outerRadius,
-        sides: 5,
+        sides: 8,
+        startAngle: Math.PI / 8 * 3,
+        dots: [
+          { from: 1, direction: -1, },
+          { from: 1, direction: +1, },
+          { from: 2, direction: +3, },
+          { from: 5, direction: +3, },
+        ],
+      },
+      {
+        cX: screenCenter.x,
+        cY: screenCenter.y,
+        outerRadius,
+        sides: 4,
+        startAngle: Math.PI / 2,
         dots: [
           { from: 0, direction: +1, },
-          { from: 1, direction: +1, },
-          { from: 3, direction: -1, },
-          { from: 3, direction: +1, },
-          { from: 4, direction: +1, },
+          { from: 0, direction: -1, },
+          { from: 2, direction: +1, },
+          { from: 2, direction: -1, },
         ],
       },
       {
@@ -92,26 +82,36 @@ export default class Sketch {
         outerRadius,
         sides: 6,
         dots: [
-          { from: 0, direction: +1, },
+          { from: 1, direction: -1, },
           { from: 1, direction: +1, },
           { from: 3, direction: -1, },
-          { from: 3, direction: +1, },
-          { from: 5, direction: -1, },
-          { from: 6, direction: -1, },
+          { from: 4, direction: -1, },
+          { from: 4, direction: +2, },
         ],
       },
-      // {
-      //   cX: screenCenter.x,
-      //   cY: screenCenter.y,
-      //   outerRadius,
-      //   sides: 7,
-      // },
-      // {
-      //   cX: screenCenter.x,
-      //   cY: screenCenter.y,
-      //   outerRadius,
-      //   sides: 8,
-      // },
+      {
+        cX: screenCenter.x,
+        cY: screenCenter.y,
+        outerRadius,
+        sides: 0,
+        startAngle: Math.PI / 2,
+        dots: [
+          {antiClockwise: true},
+        ],
+      },
+      {
+        cX: screenCenter.x,
+        cY: screenCenter.y,
+        outerRadius,
+        sides: 8,
+        startAngle: Math.PI / 8 * 3,
+        dots: [
+          { from: 2, direction: -2, },
+          { from: 2, direction: +1, },
+          { from: 3, direction: +3, },
+          { from: 6, direction: +2, },
+        ],
+      },
     ]
   }
 
