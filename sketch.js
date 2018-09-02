@@ -1,4 +1,4 @@
-import { polygon } from './shapes.js';
+import { drawShape } from './shapes.js';
 
 export default class Sketch {
   constructor(rootEl, options = {}) {
@@ -43,7 +43,10 @@ export default class Sketch {
         outerRadius,
         sides: 0,
         startAngle: Math.PI,
-        antiClockwise: true,
+        dots: [
+          {antiClockwise: true},
+          {antiClockwise: false},
+        ],
       },
       {
         cX: screenCenter.x,
@@ -51,7 +54,11 @@ export default class Sketch {
         outerRadius,
         sides: 3,
         startAngle: Math.PI / 6,
-        antiClockwise: true,
+        dots: [
+          { from: 0, direction: +1, },
+          { from: 1, direction: +1, },
+          { from: 2, direction: +1, },
+        ],
       },
       {
         cX: screenCenter.x,
@@ -59,42 +66,52 @@ export default class Sketch {
         outerRadius,
         sides: 4,
         startAngle: Math.PI / 4,
-        antiClockwise: true,
-        // dots: [
-        //   {
-        //     from: 0,
-        //     to: 2,
-        //   },
-        //   {
-        //     from: 3,
-        //     to: 2,
-        //   }
-        // ],
+        dots: [
+          { from: 0, direction: +1, },
+          { from: 4, direction: -1, },
+          { from: 2, direction: -1, },
+          { from: 2, direction: +1, },
+        ],
       },
       {
         cX: screenCenter.x,
         cY: screenCenter.y,
         outerRadius,
         sides: 5,
+        dots: [
+          { from: 0, direction: +1, },
+          { from: 1, direction: +1, },
+          { from: 3, direction: -1, },
+          { from: 3, direction: +1, },
+          { from: 4, direction: +1, },
+        ],
       },
       {
         cX: screenCenter.x,
         cY: screenCenter.y,
         outerRadius,
         sides: 6,
+        dots: [
+          { from: 0, direction: +1, },
+          { from: 1, direction: +1, },
+          { from: 3, direction: -1, },
+          { from: 3, direction: +1, },
+          { from: 5, direction: -1, },
+          { from: 6, direction: -1, },
+        ],
       },
-      {
-        cX: screenCenter.x,
-        cY: screenCenter.y,
-        outerRadius,
-        sides: 7,
-      },
-      {
-        cX: screenCenter.x,
-        cY: screenCenter.y,
-        outerRadius,
-        sides: 8,
-      },
+      // {
+      //   cX: screenCenter.x,
+      //   cY: screenCenter.y,
+      //   outerRadius,
+      //   sides: 7,
+      // },
+      // {
+      //   cX: screenCenter.x,
+      //   cY: screenCenter.y,
+      //   outerRadius,
+      //   sides: 8,
+      // },
     ]
   }
 
@@ -144,7 +161,7 @@ export default class Sketch {
     this._ctx.strokeStyle = `rgba(30, 30, 30, ${1})`;
     this.shapes.forEach((shapeOpts, i) => {
       const progressOffset = i * this._animCounterOffset / this._animCounterEnd;
-      polygon(this._ctx, progress - progressOffset, shapeOpts);
+      drawShape(this._ctx, progress - progressOffset, shapeOpts);
     });
 
     if (this._animActive) {
