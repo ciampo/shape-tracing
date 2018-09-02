@@ -117,7 +117,10 @@ class Sketch {
         outerRadius,
         sides: 0,
         startAngle: Math.PI,
-        antiClockwise: true,
+        dots: [
+          {antiClockwise: true},
+          {antiClockwise: false},
+        ],
       },
       {
         cX: screenCenter.x,
@@ -125,7 +128,11 @@ class Sketch {
         outerRadius,
         sides: 3,
         startAngle: Math.PI / 6,
-        antiClockwise: true,
+        dots: [
+          { from: 0, direction: +1, },
+          { from: 1, direction: +1, },
+          { from: 2, direction: +1, },
+        ],
       },
       {
         cX: screenCenter.x,
@@ -133,42 +140,52 @@ class Sketch {
         outerRadius,
         sides: 4,
         startAngle: Math.PI / 4,
-        antiClockwise: true,
-        // dots: [
-        //   {
-        //     from: 0,
-        //     to: 2,
-        //   },
-        //   {
-        //     from: 3,
-        //     to: 2,
-        //   }
-        // ],
+        dots: [
+          { from: 0, direction: +1, },
+          { from: 4, direction: -1, },
+          { from: 2, direction: -1, },
+          { from: 2, direction: +1, },
+        ],
       },
       {
         cX: screenCenter.x,
         cY: screenCenter.y,
         outerRadius,
         sides: 5,
+        dots: [
+          { from: 0, direction: +1, },
+          { from: 1, direction: +1, },
+          { from: 3, direction: -1, },
+          { from: 3, direction: +1, },
+          { from: 4, direction: +1, },
+        ],
       },
       {
         cX: screenCenter.x,
         cY: screenCenter.y,
         outerRadius,
         sides: 6,
+        dots: [
+          { from: 0, direction: +1, },
+          { from: 1, direction: +1, },
+          { from: 3, direction: -1, },
+          { from: 3, direction: +1, },
+          { from: 5, direction: -1, },
+          { from: 6, direction: -1, },
+        ],
       },
-      {
-        cX: screenCenter.x,
-        cY: screenCenter.y,
-        outerRadius,
-        sides: 7,
-      },
-      {
-        cX: screenCenter.x,
-        cY: screenCenter.y,
-        outerRadius,
-        sides: 8,
-      },
+      // {
+      //   cX: screenCenter.x,
+      //   cY: screenCenter.y,
+      //   outerRadius,
+      //   sides: 7,
+      // },
+      // {
+      //   cX: screenCenter.x,
+      //   cY: screenCenter.y,
+      //   outerRadius,
+      //   sides: 8,
+      // },
     ]
   }
 
@@ -218,7 +235,7 @@ class Sketch {
     this._ctx.strokeStyle = `rgba(30, 30, 30, ${1})`;
     this.shapes.forEach((shapeOpts, i) => {
       const progressOffset = i * this._animCounterOffset / this._animCounterEnd;
-      __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__shapes_js__["a" /* polygon */])(this._ctx, progress - progressOffset, shapeOpts);
+      __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__shapes_js__["a" /* drawShape */])(this._ctx, progress - progressOffset, shapeOpts);
     });
 
     if (this._animActive) {
@@ -355,7 +372,7 @@ function easeInOutQuint(t) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = polygon;
+/* harmony export (immutable) */ __webpack_exports__["a"] = drawShape;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__easing_js__ = __webpack_require__(2);
 
 
@@ -365,14 +382,14 @@ const defaultOptions = {
   outerRadius: 50,
   sides: 4,
   startAngle: 0,
-  antiClockwise: false,
   dotSize: 6,
+  dots: [],
 };
 
 const computeDefaultDots = (sides) => [...Array(sides).keys()]
   .map(n => [{from: n, to: (n + 1) % sides}]);
 
-function polygon(ctx, progress, options) {
+function drawShape(ctx, progress, options) {
   if (!ctx || progress < 0) {
     return;
   }
@@ -384,7 +401,6 @@ function polygon(ctx, progress, options) {
     outerRadius,
     sides,
     startAngle,
-    antiClockwise,
     dotSize,
   } = parsedOptions;
   const dots = options.dots || computeDefaultDots(sides);
@@ -394,74 +410,80 @@ function polygon(ctx, progress, options) {
   }
 
   const easedProgress = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__easing_js__["a" /* easeInOutCubic */])(Math.max(0, Math.min(1, progress)));
-  const angleMult = antiClockwise ? -1 : 1;
   const dotRadius = dotSize * (1 - easedProgress);
 
   ctx.save();
-  ctx.translate(Math.round(cX) + 0.5, Math.round(cY) + 0.5);
+  ctx.translate(Math.round(cX), Math.round(cY));
   ctx.rotate(startAngle);
   ctx.lineWidth = 1;
 
   if (sides === 0) {
-    // The angle that te arc is drawn to.
-    const progressAngle = 2 * Math.PI * easedProgress * angleMult;
+    // Circle
+    dots.forEach(({antiClockwise}, dotIndex) => {
+      // Compute angles. Keeping in mind that we already rotated by startAngle.
+      const offsetAngle = antiClockwise ?
+          2 * Math.PI * (dotIndex - dots.length + 1) / dots.length :
+          2 * Math.PI * dotIndex / dots.length;
+      const progressAngle = 2 * Math.PI * easedProgress * (antiClockwise ? -1 : 1) / dots.length;
 
-    ctx.beginPath();
-    // Because we rotated the ctx by startAngle, we can always assume
-    // to start drawing from (outerRadius, 0).
-    ctx.moveTo(outerRadius, 0);
-    ctx.arc(0, 0, outerRadius, 0, progressAngle, antiClockwise);
-    ctx.stroke();
-
-    // pDot is the point where the "plotting" dot is drawn
-    const pDot = {
-      x: outerRadius * Math.cos(progressAngle),
-      y: outerRadius * Math.sin(progressAngle),
-    };
-    ctx.beginPath();
-    ctx.moveTo(pDot.x, pDot.y);
-    ctx.arc(pDot.x, pDot.y, dotRadius, 0, Math.PI * 2, false);
-
-    ctx.fill();
-
-  } else {
-    const angleIncrement = Math.PI * 2 / sides * angleMult;
-    const sideLength = 2 * outerRadius * Math.sin(Math.PI / sides);
-
-    // Draw.
-    for (let i = 1; i <= sides; i++) {
-      // P0 is where the line starts from
-      const p0 = {
-        x: outerRadius * Math.cos(angleIncrement * (i - 1)),
-        y: outerRadius * Math.sin(angleIncrement * (i - 1)),
+      const pArcStart = {
+        x: outerRadius * Math.cos(offsetAngle),
+        y: outerRadius * Math.sin(offsetAngle),
       };
-      // P1 is where the line goes to
-      const p1 = {
-        x: outerRadius * Math.cos(angleIncrement * i),
-        y: outerRadius * Math.sin(angleIncrement * i),
+      const pDot = {
+        x: outerRadius * Math.cos(offsetAngle + progressAngle),
+        y: outerRadius * Math.sin(offsetAngle + progressAngle),
       };
 
+      // Draw arc.
       ctx.beginPath();
-
-      ctx.setLineDash([sideLength * easedProgress, sideLength * (1 - easedProgress)]);
-
-      ctx.moveTo(p0.x, p0.y);
-      ctx.lineTo(p1.x, p1.y);
-
+      ctx.moveTo(pArcStart.x, pArcStart.y);
+      ctx.arc(0, 0, outerRadius, offsetAngle, offsetAngle + progressAngle, antiClockwise);
       ctx.stroke();
 
-      const pDot = {
-        x: p0.x + (p1.x - p0.x) * easedProgress,
-        y: p0.y + (p1.y - p0.y) * easedProgress,
-      }
-
+      // Draw dot.
       ctx.beginPath();
-
       ctx.moveTo(pDot.x, pDot.y);
       ctx.arc(pDot.x, pDot.y, dotRadius, 0, Math.PI * 2, false);
-
       ctx.fill();
-    }
+    });
+
+  } else {
+    // Regular polygon.
+    const angleIncrement = Math.PI * 2 / sides;
+    const sideLength = 2 * outerRadius * Math.sin(Math.PI / sides);
+
+    dots.forEach(({from, direction}) => {
+      if (direction === 0) {
+        return;
+      }
+
+      const pSideStart = {
+        x: outerRadius * Math.cos(angleIncrement * from),
+        y: outerRadius * Math.sin(angleIncrement * from),
+      };
+      const pSideEnd = {
+        x: outerRadius * Math.cos(angleIncrement * (from + Math.sign(direction))),
+        y: outerRadius * Math.sin(angleIncrement * (from + Math.sign(direction))),
+      };
+      const pDot = {
+        x: pSideStart.x + (pSideEnd.x - pSideStart.x) * easedProgress,
+        y: pSideStart.y + (pSideEnd.y - pSideStart.y) * easedProgress,
+      };
+
+      // Draw line (simulate progress through a dashed line).
+      ctx.beginPath();
+      ctx.setLineDash([sideLength * easedProgress, sideLength]);
+      ctx.moveTo(pSideStart.x, pSideStart.y);
+      ctx.lineTo(pSideEnd.x, pSideEnd.y);
+      ctx.stroke();
+
+      // Draw dot.
+      ctx.beginPath();
+      ctx.moveTo(pDot.x, pDot.y);
+      ctx.arc(pDot.x, pDot.y, dotRadius, 0, Math.PI * 2, false);
+      ctx.fill();
+    });
   }
 
   ctx.restore();
