@@ -1,5 +1,3 @@
-import { easeInOutCubic } from './easing.js';
-
 const defaultOptions = {
   cX: 0,
   cY: 0,
@@ -13,8 +11,11 @@ const defaultOptions = {
 const computeDefaultDots = (sides) => [...Array(sides).keys()]
   .map(n => [{from: n, to: (n + 1) % sides}]);
 
+const easeOutBezier = BezierEasing(0.32, 0, 0.15, 1);
+const easeOut = p => easeOutBezier(p);
+
 export function drawShape(ctx, progress, options) {
-  if (!ctx || progress < 0) {
+  if (!ctx) {
     return;
   }
 
@@ -33,19 +34,28 @@ export function drawShape(ctx, progress, options) {
     return;
   }
 
-  let easedProgress = easeInOutCubic(Math.max(0, Math.min(1, progress)));
-  const dotRadius = dotSize * (1 - easedProgress);
-
-  let overProgress = 0;
-  if (progress > 1) {
-    overProgress = easeInOutCubic(Math.max(0, Math.min(1, progress - 1)));
+  let drawingProgress = easeOut(Math.max(0, Math.min(1, progress)));
+  let beforeDrawingProgress = 0;
+  if (progress < 0) {
+    // 2 + progress makes sure beforeDrawingProgress is twice as fast as
+    // the time that it takes to draw the shape (quicker fade in)
+    beforeDrawingProgress = easeOut(Math.max(0, Math.min(1, - 2 * progress)));
   }
+  let afterDrawingProgress = 0;
+  if (progress > 1) {
+    // progress / 2 makes sure afterDrawingProgress takes twice as long as
+    // the time that it takes to draw the shape (smoother fade out)
+    afterDrawingProgress = easeOut(Math.max(0, Math.min(1, (progress - 1) / 2)));
+  }
+
+  const dotRadius = dotSize * (1 - drawingProgress);
 
   ctx.save();
   ctx.translate(Math.round(cX), Math.round(cY));
   ctx.rotate(startAngle);
-  ctx.scale(1 + 0.5 * overProgress, 1 + 0.5 * overProgress);
-  ctx.globalAlpha = 1 - overProgress;
+  ctx.scale(1 + 0.7 * afterDrawingProgress, 1 + 0.7 * afterDrawingProgress);
+  ctx.globalAlpha = beforeDrawingProgress ?
+    1 - beforeDrawingProgress : 1 - afterDrawingProgress;
   ctx.lineWidth = 1;
 
   if (sides === 0) {
@@ -55,7 +65,7 @@ export function drawShape(ctx, progress, options) {
       const offsetAngle = antiClockwise ?
           2 * Math.PI * (dotIndex - dots.length + 1) / dots.length :
           2 * Math.PI * dotIndex / dots.length;
-      const progressAngle = 2 * Math.PI * easedProgress * (antiClockwise ? -1 : 1) / dots.length;
+      const progressAngle = 2 * Math.PI * drawingProgress * (antiClockwise ? -1 : 1) / dots.length;
 
       const pArcStart = {
         x: outerRadius * Math.cos(offsetAngle),
@@ -89,7 +99,7 @@ export function drawShape(ctx, progress, options) {
         return;
       }
 
-      let sideProgress = easedProgress * Math.abs(direction);
+      let sideProgress = drawingProgress * Math.abs(direction);
       let startingCorner = from;
 
       ctx.beginPath();

@@ -23,8 +23,8 @@ export default class Sketch {
 
     this._animActive = false;
     this._animCounter = 0;
-    this._animCounterOffset = 100;
-    this._animCounterEnd = 300;
+    this._animCounterShapeDuration = 180;
+    this._animCounterShapeOffset = this._animCounterShapeDuration / 2;
 
     this.onResize();
   }
@@ -152,22 +152,17 @@ export default class Sketch {
     this._ctx.fillStyle = '#e4e3e5';
     this._ctx.fillRect(0, 0, this._viewportSize.w, this._viewportSize.h);
 
-    let progress = 0;
-    if (this._animActive) {
-      progress = this._animCounter / this._animCounterEnd;
-    }
-
     this._ctx.fillStyle = 'rgb(30, 30, 30)';
     this._ctx.strokeStyle = `rgba(30, 30, 30, ${1})`;
     this.shapes.forEach((shapeOpts, i) => {
-      const progressOffset = i * this._animCounterOffset / this._animCounterEnd;
-      drawShape(this._ctx, progress - progressOffset, shapeOpts);
+      const progress = (this._animCounter - (i + 1) * this._animCounterShapeOffset) / this._animCounterShapeDuration;
+      drawShape(this._ctx, progress, shapeOpts);
     });
 
     if (this._animActive) {
       this._animCounter += 1;
 
-      // if (this._animCounter > this._animCounterEnd) {
+      // if (this._animCounter > this._animCounterShapeDuration) {
       //   this._animActive = false;
       //   this._animCounter = 0;
       // }
