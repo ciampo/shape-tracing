@@ -71,7 +71,7 @@
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__shapes_js__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__shapes_js__ = __webpack_require__(2);
 
 
 class Sketch {
@@ -97,8 +97,8 @@ class Sketch {
 
     this._animActive = false;
     this._animCounter = 0;
-    this._animCounterOffset = 100;
-    this._animCounterEnd = 300;
+    this._animCounterShapeDuration = 180;
+    this._animCounterShapeOffset = this._animCounterShapeDuration / 2;
 
     this.onResize();
   }
@@ -226,22 +226,17 @@ class Sketch {
     this._ctx.fillStyle = '#e4e3e5';
     this._ctx.fillRect(0, 0, this._viewportSize.w, this._viewportSize.h);
 
-    let progress = 0;
-    if (this._animActive) {
-      progress = this._animCounter / this._animCounterEnd;
-    }
-
     this._ctx.fillStyle = 'rgb(30, 30, 30)';
     this._ctx.strokeStyle = `rgba(30, 30, 30, ${1})`;
     this.shapes.forEach((shapeOpts, i) => {
-      const progressOffset = i * this._animCounterOffset / this._animCounterEnd;
-      __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__shapes_js__["a" /* drawShape */])(this._ctx, progress - progressOffset, shapeOpts);
+      const progress = (this._animCounter - (i + 1) * this._animCounterShapeOffset) / this._animCounterShapeDuration;
+      __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__shapes_js__["a" /* drawShape */])(this._ctx, progress, shapeOpts);
     });
 
     if (this._animActive) {
       this._animCounter += 1;
 
-      // if (this._animCounter > this._animCounterEnd) {
+      // if (this._animCounter > this._animCounterShapeDuration) {
       //   this._animActive = false;
       //   this._animCounter = 0;
       // }
@@ -290,92 +285,7 @@ start();
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* unused harmony export linear */
-/* unused harmony export easeInQuad */
-/* unused harmony export easeOutQuad */
-/* unused harmony export easeInOutQuad */
-/* unused harmony export easeInCubic */
-/* unused harmony export easeOutCubic */
-/* harmony export (immutable) */ __webpack_exports__["a"] = easeInOutCubic;
-/* unused harmony export easeInQuart */
-/* unused harmony export easeOutQuart */
-/* unused harmony export easeInOutQuart */
-/* unused harmony export easeInQuint */
-/* unused harmony export easeOutQuint */
-/* unused harmony export easeInOutQuint */
-function linear(t) {
-  return t;
-}
-
-// accelerating from zero velocity
-function easeInQuad(t) {
-  return t * t;
-}
-
-// decelerating to zero velocity
-function easeOutQuad(t) {
-  return t * (2 - t);
-}
-
-// acceleration until halfway, then deceleration
-function easeInOutQuad(t) {
-  return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-}
-
-// accelerating from zero velocity
-function easeInCubic(t) {
-  return t * t * t;
-}
-
-// decelerating to zero velocity
-function easeOutCubic(t) {
-  return --t * t * t + 1;
-}
-
-// acceleration until halfway, then deceleration
-function easeInOutCubic(t) {
-  return t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
-}
-
-// accelerating from zero velocity
-function easeInQuart(t) {
-  return t * t * t * t;
-}
-
-// decelerating to zero velocity
-function easeOutQuart(t) {
-  return 1 - --t * t * t * t;
-}
-
-// acceleration until halfway, then deceleration
-function easeInOutQuart(t) {
-  return t < 0.5 ? 8 * t * t * t * t : 1 - 8 * --t * t * t * t;
-}
-
-// accelerating from zero velocity
-function easeInQuint(t) {
-  return t * t * t * t * t;
-}
-
-// decelerating to zero velocity
-function easeOutQuint(t) {
-  return 1 + --t * t * t * t * t;
-}
-
-// acceleration until halfway, then deceleration
-function easeInOutQuint(t) {
-  return t < 0.5 ? 16 * t * t * t * t * t : 1 + 16 * --t * t * t * t * t;
-}
-
-/***/ }),
-/* 3 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = drawShape;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__easing_js__ = __webpack_require__(2);
-
-
 const defaultOptions = {
   cX: 0,
   cY: 0,
@@ -389,8 +299,11 @@ const defaultOptions = {
 const computeDefaultDots = (sides) => [...Array(sides).keys()]
   .map(n => [{from: n, to: (n + 1) % sides}]);
 
+const easeOutBezier = BezierEasing(0.32, 0, 0.15, 1);
+const easeOut = p => easeOutBezier(p);
+
 function drawShape(ctx, progress, options) {
-  if (!ctx || progress < 0) {
+  if (!ctx) {
     return;
   }
 
@@ -409,19 +322,28 @@ function drawShape(ctx, progress, options) {
     return;
   }
 
-  let easedProgress = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__easing_js__["a" /* easeInOutCubic */])(Math.max(0, Math.min(1, progress)));
-  const dotRadius = dotSize * (1 - easedProgress);
-
-  let overProgress = 0;
-  if (progress > 1) {
-    overProgress = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__easing_js__["a" /* easeInOutCubic */])(Math.max(0, Math.min(1, progress - 1)));
+  let drawingProgress = easeOut(Math.max(0, Math.min(1, progress)));
+  let beforeDrawingProgress = 0;
+  if (progress < 0) {
+    // 2 + progress makes sure beforeDrawingProgress is twice as fast as
+    // the time that it takes to draw the shape (quicker fade in)
+    beforeDrawingProgress = easeOut(Math.max(0, Math.min(1, - 2 * progress)));
   }
+  let afterDrawingProgress = 0;
+  if (progress > 1) {
+    // progress / 2 makes sure afterDrawingProgress takes twice as long as
+    // the time that it takes to draw the shape (smoother fade out)
+    afterDrawingProgress = easeOut(Math.max(0, Math.min(1, (progress - 1) / 2)));
+  }
+
+  const dotRadius = dotSize * (1 - drawingProgress);
 
   ctx.save();
   ctx.translate(Math.round(cX), Math.round(cY));
   ctx.rotate(startAngle);
-  ctx.scale(1 + 0.5 * overProgress, 1 + 0.5 * overProgress);
-  ctx.globalAlpha = 1 - overProgress;
+  ctx.scale(1 + 0.7 * afterDrawingProgress, 1 + 0.7 * afterDrawingProgress);
+  ctx.globalAlpha = beforeDrawingProgress ?
+    1 - beforeDrawingProgress : 1 - afterDrawingProgress;
   ctx.lineWidth = 1;
 
   if (sides === 0) {
@@ -431,7 +353,7 @@ function drawShape(ctx, progress, options) {
       const offsetAngle = antiClockwise ?
           2 * Math.PI * (dotIndex - dots.length + 1) / dots.length :
           2 * Math.PI * dotIndex / dots.length;
-      const progressAngle = 2 * Math.PI * easedProgress * (antiClockwise ? -1 : 1) / dots.length;
+      const progressAngle = 2 * Math.PI * drawingProgress * (antiClockwise ? -1 : 1) / dots.length;
 
       const pArcStart = {
         x: outerRadius * Math.cos(offsetAngle),
@@ -465,7 +387,7 @@ function drawShape(ctx, progress, options) {
         return;
       }
 
-      let sideProgress = easedProgress * Math.abs(direction);
+      let sideProgress = drawingProgress * Math.abs(direction);
       let startingCorner = from;
 
       ctx.beginPath();
