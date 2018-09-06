@@ -9,7 +9,7 @@ const defaultOptions = {
 };
 
 const computeDefaultDots = (sides) => [...Array(sides).keys()]
-  .map(n => [{from: n, to: (n + 1) % sides}]);
+  .map(n => ({from: n, direction: +1}));
 
 const easeOutBezier = BezierEasing(0.32, 0, 0.15, 1);
 const easeOut = p => easeOutBezier(p);
@@ -55,7 +55,7 @@ export function drawShape(ctx, progress, options) {
   ctx.save();
   ctx.translate(Math.round(cX), Math.round(cY));
   ctx.rotate(startAngle);
-  ctx.scale(1 + 0.7 * afterDrawingProgress, 1 + 0.7 * afterDrawingProgress);
+  ctx.scale(1 + 1.5 * afterDrawingProgress, 1 + 1.5 * afterDrawingProgress);
   ctx.globalAlpha = 1 - afterDrawingProgress;
   ctx.lineWidth = 1;
 
@@ -151,3 +151,42 @@ export function drawShape(ctx, progress, options) {
 
   ctx.restore();
 }
+
+
+export function generateRandomShape(center, radius, vetoSides = -1) {
+  // Possible values: 0 - 3 - 4 - 5 - 6 - 7 - 8 - 9 - 10.
+  let sides = -1;
+  while(sides < 0 ||
+        sides > 8 ||
+        sides === 2 ||
+        sides % 2 !== 0 ||
+        sides === vetoSides
+  ) {
+    sides = Math.floor(Math.random() * 11);
+  }
+
+  const toReturn = {
+    cX: center.x,
+    cY: center.y,
+    outerRadius: radius,
+    sides,
+    startAngle: Math.PI / (sides || 1) * Math.floor(Math.random() * (sides + 1)),
+  };
+
+  if (sides === 0) {
+    toReturn.dots = [];
+
+    const howManyDots = 1 + Math.floor(Math.random() * 4)
+    for (let i = 0; i < howManyDots; i++) {
+      toReturn.dots.push({
+        antiClockwise: Math.random() > 0.5
+      });
+    }
+
+  } else {
+    toReturn.dots = computeDefaultDots(sides);
+  }
+
+  return toReturn;
+}
+
