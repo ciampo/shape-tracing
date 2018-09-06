@@ -48,14 +48,15 @@ export function drawShape(ctx, progress, options) {
     afterDrawingProgress = easeOut(Math.max(0, Math.min(1, (progress - 1) / 2)));
   }
 
-  const dotRadius = dotSize * (1 - drawingProgress);
+  const dotRadius = beforeDrawingProgress > 0 ?
+    dotSize * (1 - beforeDrawingProgress) :
+    dotSize * (1 - drawingProgress);
 
   ctx.save();
   ctx.translate(Math.round(cX), Math.round(cY));
   ctx.rotate(startAngle);
   ctx.scale(1 + 0.7 * afterDrawingProgress, 1 + 0.7 * afterDrawingProgress);
-  ctx.globalAlpha = beforeDrawingProgress ?
-    1 - beforeDrawingProgress : 1 - afterDrawingProgress;
+  ctx.globalAlpha = 1 - afterDrawingProgress;
   ctx.lineWidth = 1;
 
   if (sides === 0) {
