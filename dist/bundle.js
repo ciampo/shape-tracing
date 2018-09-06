@@ -95,98 +95,112 @@ class Sketch {
     this._root.addEventListener('pointermove', this._onPointerMove);
     this._root.addEventListener('pointerup', this._onPointerUp);
 
-    this._animActive = false;
+    this._animActive = true;
     this._animCounter = 0;
     this._animCounterShapeDuration = 180;
-    this._animCounterShapeOffset = this._animCounterShapeDuration / 2;
+    this._animCounterShapeOffset = Math.round(this._animCounterShapeDuration * 0.75);
 
     this.onResize();
+
+    this.shapes = this.generateShapes();
+    console.log(this.shapes);
   }
 
-  get shapes() {
+  generateShapes() {
     const screenCenter = {
       x: this._viewportSize.w / 2,
       y: this._viewportSize.h / 2,
     };
     const outerRadius = Math.round(Math.min(screenCenter.x, screenCenter.y) * 0.7);
 
-    return [
-      {
-        cX: screenCenter.x,
-        cY: screenCenter.y,
-        outerRadius,
-        sides: 4,
-        startAngle: Math.PI / 4,
-        dots: [
-          { from: 0, direction: +1, },
-          { from: 1, direction: +1, },
-          { from: 2, direction: +1, },
-          { from: 3, direction: +1, },
-        ],
-      },
-      {
-        cX: screenCenter.x,
-        cY: screenCenter.y,
-        outerRadius,
-        sides: 8,
-        startAngle: Math.PI / 8 * 3,
-        dots: [
-          { from: 1, direction: -1, },
-          { from: 1, direction: +1, },
-          { from: 2, direction: +3, },
-          { from: 5, direction: +3, },
-        ],
-      },
-      {
-        cX: screenCenter.x,
-        cY: screenCenter.y,
-        outerRadius,
-        sides: 4,
-        startAngle: Math.PI / 2,
-        dots: [
-          { from: 0, direction: +1, },
-          { from: 0, direction: -1, },
-          { from: 2, direction: +1, },
-          { from: 2, direction: -1, },
-        ],
-      },
-      {
-        cX: screenCenter.x,
-        cY: screenCenter.y,
-        outerRadius,
-        sides: 6,
-        dots: [
-          { from: 1, direction: -1, },
-          { from: 1, direction: +1, },
-          { from: 3, direction: -1, },
-          { from: 4, direction: -1, },
-          { from: 4, direction: +2, },
-        ],
-      },
-      {
-        cX: screenCenter.x,
-        cY: screenCenter.y,
-        outerRadius,
-        sides: 0,
-        startAngle: Math.PI / 2,
-        dots: [
-          {antiClockwise: true},
-        ],
-      },
-      {
-        cX: screenCenter.x,
-        cY: screenCenter.y,
-        outerRadius,
-        sides: 8,
-        startAngle: Math.PI / 8 * 3,
-        dots: [
-          { from: 2, direction: -2, },
-          { from: 2, direction: +1, },
-          { from: 3, direction: +3, },
-          { from: 6, direction: +2, },
-        ],
-      },
-    ]
+    const toReturn = [];
+
+    for (let i = 0; i < 100; i++) {
+      const prevSides = i > 0 && toReturn[i - 1].sides;
+      toReturn.push(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__shapes_js__["a" /* generateRandomShape */])(screenCenter, outerRadius, prevSides));
+    }
+
+
+    return toReturn;
+
+
+    // return [
+    //   {
+    //     cX: screenCenter.x,
+    //     cY: screenCenter.y,
+    //     outerRadius,
+    //     sides: 4,
+    //     startAngle: Math.PI / 4,
+    //     dots: [
+    //       { from: 0, direction: +1, },
+    //       { from: 1, direction: +1, },
+    //       { from: 2, direction: +1, },
+    //       { from: 3, direction: +1, },
+    //     ],
+    //   },
+    //   {
+    //     cX: screenCenter.x,
+    //     cY: screenCenter.y,
+    //     outerRadius,
+    //     sides: 8,
+    //     startAngle: Math.PI / 8 * 3,
+    //     dots: [
+    //       { from: 1, direction: -1, },
+    //       { from: 1, direction: +1, },
+    //       { from: 2, direction: +3, },
+    //       { from: 5, direction: +3, },
+    //     ],
+    //   },
+    //   {
+    //     cX: screenCenter.x,
+    //     cY: screenCenter.y,
+    //     outerRadius,
+    //     sides: 4,
+    //     startAngle: Math.PI / 2,
+    //     dots: [
+    //       { from: 0, direction: +1, },
+    //       { from: 0, direction: -1, },
+    //       { from: 2, direction: +1, },
+    //       { from: 2, direction: -1, },
+    //     ],
+    //   },
+    //   {
+    //     cX: screenCenter.x,
+    //     cY: screenCenter.y,
+    //     outerRadius,
+    //     sides: 6,
+    //     dots: [
+    //       { from: 1, direction: -1, },
+    //       { from: 1, direction: +1, },
+    //       { from: 3, direction: -1, },
+    //       { from: 4, direction: -1, },
+    //       { from: 4, direction: +2, },
+    //     ],
+    //   },
+    //   {
+    //     cX: screenCenter.x,
+    //     cY: screenCenter.y,
+    //     outerRadius,
+    //     sides: 0,
+    //     startAngle: Math.PI / 2,
+    //     dots: [
+    //       {antiClockwise: true},
+    //     ],
+    //   },
+    //   {
+    //     cX: screenCenter.x,
+    //     cY: screenCenter.y,
+    //     outerRadius,
+    //     sides: 8,
+    //     startAngle: Math.PI / 8 * 3,
+    //     dots: [
+    //       { from: 2, direction: -2, },
+    //       { from: 2, direction: +1, },
+    //       { from: 3, direction: +3, },
+    //       { from: 6, direction: +2, },
+    //     ],
+    //   },
+    // ]
   }
 
   startDrawing() {
@@ -223,23 +237,18 @@ class Sketch {
       requestAnimationFrame(this.drawFrame);
     }
 
-    this._ctx.fillStyle = '#e4e3e5';
+    this._ctx.fillStyle = '#222';
     this._ctx.fillRect(0, 0, this._viewportSize.w, this._viewportSize.h);
 
-    this._ctx.fillStyle = 'rgb(30, 30, 30)';
-    this._ctx.strokeStyle = `rgba(30, 30, 30, ${1})`;
+    this._ctx.fillStyle = 'rgb(200, 200, 200)';
+    this._ctx.strokeStyle = `rgba(200, 200, 200, ${1})`;
     this.shapes.forEach((shapeOpts, i) => {
       const progress = (this._animCounter - (i + 1) * this._animCounterShapeOffset) / this._animCounterShapeDuration;
-      __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__shapes_js__["a" /* drawShape */])(this._ctx, progress, shapeOpts);
+      __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__shapes_js__["b" /* drawShape */])(this._ctx, progress, shapeOpts);
     });
 
     if (this._animActive) {
       this._animCounter += 1;
-
-      // if (this._animCounter > this._animCounterShapeDuration) {
-      //   this._animActive = false;
-      //   this._animCounter = 0;
-      // }
     }
   }
 }
@@ -285,7 +294,8 @@ start();
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = drawShape;
+/* harmony export (immutable) */ __webpack_exports__["b"] = drawShape;
+/* harmony export (immutable) */ __webpack_exports__["a"] = generateRandomShape;
 const defaultOptions = {
   cX: 0,
   cY: 0,
@@ -297,7 +307,7 @@ const defaultOptions = {
 };
 
 const computeDefaultDots = (sides) => [...Array(sides).keys()]
-  .map(n => [{from: n, to: (n + 1) % sides}]);
+  .map(n => ({from: n, direction: +1}));
 
 const easeOutBezier = BezierEasing(0.32, 0, 0.15, 1);
 const easeOut = p => easeOutBezier(p);
@@ -336,14 +346,15 @@ function drawShape(ctx, progress, options) {
     afterDrawingProgress = easeOut(Math.max(0, Math.min(1, (progress - 1) / 2)));
   }
 
-  const dotRadius = dotSize * (1 - drawingProgress);
+  const dotRadius = beforeDrawingProgress > 0 ?
+    dotSize * (1 - beforeDrawingProgress) :
+    dotSize * (1 - drawingProgress);
 
   ctx.save();
   ctx.translate(Math.round(cX), Math.round(cY));
   ctx.rotate(startAngle);
-  ctx.scale(1 + 0.7 * afterDrawingProgress, 1 + 0.7 * afterDrawingProgress);
-  ctx.globalAlpha = beforeDrawingProgress ?
-    1 - beforeDrawingProgress : 1 - afterDrawingProgress;
+  ctx.scale(1 + 1.5 * afterDrawingProgress, 1 + 1.5 * afterDrawingProgress);
+  ctx.globalAlpha = 1 - afterDrawingProgress;
   ctx.lineWidth = 1;
 
   if (sides === 0) {
@@ -438,6 +449,45 @@ function drawShape(ctx, progress, options) {
 
   ctx.restore();
 }
+
+
+function generateRandomShape(center, radius, vetoSides = -1) {
+  // Possible values: 0 - 3 - 4 - 5 - 6 - 7 - 8 - 9 - 10.
+  let sides = -1;
+  while(sides < 0 ||
+        sides > 8 ||
+        sides === 2 ||
+        sides % 2 !== 0 ||
+        sides === vetoSides
+  ) {
+    sides = Math.floor(Math.random() * 11);
+  }
+
+  const toReturn = {
+    cX: center.x,
+    cY: center.y,
+    outerRadius: radius,
+    sides,
+    startAngle: Math.PI / (sides || 1) * Math.floor(Math.random() * (sides + 1)),
+  };
+
+  if (sides === 0) {
+    toReturn.dots = [];
+
+    const howManyDots = 1 + Math.floor(Math.random() * 4)
+    for (let i = 0; i < howManyDots; i++) {
+      toReturn.dots.push({
+        antiClockwise: Math.random() > 0.5
+      });
+    }
+
+  } else {
+    toReturn.dots = computeDefaultDots(sides);
+  }
+
+  return toReturn;
+}
+
 
 
 /***/ })
