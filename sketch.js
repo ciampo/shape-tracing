@@ -14,6 +14,7 @@ export default class Sketch {
     this._canvas = document.createElement('canvas');
     this._ctx = this._canvas.getContext('2d');
     this._root.appendChild(this._canvas);
+    this._darkMode = true;
 
     // Device pixel ratio.
     this._DPR = 1;// window.devicePixelRatio;
@@ -24,31 +25,42 @@ export default class Sketch {
     this._animActive = true;
     this._animCounter = 0;
     this._animCounterShapeDuration = 180;
-    this._animCounterShapeOffset = Math.round(this._animCounterShapeDuration * 0.75);
+    this._animCounterShapeOffset =
+      Math.round(this._animCounterShapeDuration * 0.75);
 
     this.onResize();
 
-    this.shapes = this.generateShapes();
-    console.log(this.shapes);
+    // Start with two shapes, add more as the
+    this.shapes = [];
+    this.addShape();
+    this.addShape();
   }
 
-  generateShapes() {
+  get drawingColors() {
+    return this._darkMode ? {
+      bg: '#222',
+      fg: '#ddd',
+    } : {
+      bg: '#e4e3e5',
+      fg: '#1e1e1e',
+    };
+  }
+
+  switchColorMode() {
+    this._darkMode = !this._darkMode;
+  }
+
+  addShape() {
     const screenCenter = {
       x: this._viewportSize.w / 2,
       y: this._viewportSize.h / 2,
     };
     const outerRadius = Math.round(Math.min(screenCenter.x, screenCenter.y) * 0.7);
 
-    const toReturn = [];
+    const shapesLength = this.shapes.length;
+    const prevSides = shapesLength > 0 && this.shapes[shapesLength - 1].sides;
 
-    for (let i = 0; i < 100; i++) {
-      const prevSides = i > 0 && toReturn[i - 1].sides;
-      toReturn.push(generateRandomShape(screenCenter, outerRadius, prevSides));
-    }
-
-
-    return toReturn;
-
+    this.shapes.push(generateRandomShape(screenCenter, outerRadius, prevSides));
 
     // return [
     //   {
@@ -162,18 +174,23 @@ export default class Sketch {
     if (this._drawing) {
       requestAnimationFrame(this.drawFrame);
     }
-
-    this._ctx.fillStyle = '#222';
+    this._ctx.fillStyle = this.drawingColors.bg;
     this._ctx.fillRect(0, 0, this._viewportSize.w, this._viewportSize.h);
 
-    this._ctx.fillStyle = 'rgb(200, 200, 200)';
-    this._ctx.strokeStyle = `rgba(200, 200, 200, ${1})`;
+    this._ctx.fillStyle = this._ctx.strokeStyle = this.drawingColors.fg;
+
+    let shapeProgress;
     this.shapes.forEach((shapeOpts, i) => {
-      const progress = (this._animCounter - (i + 1) * this._animCounterShapeOffset) / this._animCounterShapeDuration;
-      drawShape(this._ctx, progress, shapeOpts);
+      shapeProgress = (this._animCounter - (i + 1) * this._animCounterShapeOffset) / this._animCounterShapeDuration;
+      drawShape(this._ctx, shapeProgress, shapeOpts);
     });
 
     if (this._animActive) {
+      // Add a shape when the last one has started to be drawn
+      if (shapeProgress > 0) {
+        this.addShape();
+      }
+
       this._animCounter += 1;
     }
   }
