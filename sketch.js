@@ -28,6 +28,8 @@ export default class Sketch {
     this._animCounterShapeOffset =
       Math.round(this._animCounterShapeDuration * 0.5);
 
+    this._radiusRandomVariationPerc = 0.2;
+
     this.onResize();
 
     // Start with two shapes, add more as the
@@ -55,12 +57,18 @@ export default class Sketch {
       x: this._viewportSize.w / 2,
       y: this._viewportSize.h / 2,
     };
-    const outerRadius = Math.round(Math.min(screenCenter.x, screenCenter.y) * 0.7);
+
+    // 70% of vmin
+    const radius = Math.round(Math.min(screenCenter.x, screenCenter.y) * 0.7);
+    // add a random ±10%
+    const radiusRandomness = this._radiusRandomVariationPerc *
+      (Math.round(Math.random() * 2 * radius) - radius);
 
     const shapesLength = this.shapes.length;
     const prevSides = shapesLength > 0 && this.shapes[shapesLength - 1].sides;
 
-    this.shapes.push(generateRandomShape(screenCenter, outerRadius, prevSides));
+    this.shapes.push(generateRandomShape(
+      screenCenter, radius + radiusRandomness, prevSides));
 
     // return [
     //   {
