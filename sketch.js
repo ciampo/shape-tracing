@@ -26,7 +26,7 @@ export default class Sketch {
     this._animCounter = 0;
     this._animCounterShapeDuration = 180;
     this._animCounterShapeOffset =
-      Math.round(this._animCounterShapeDuration * 0.75);
+      Math.round(this._animCounterShapeDuration * 0.5);
 
     this.onResize();
 
