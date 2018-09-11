@@ -13,6 +13,7 @@ const computeDefaultDots = (sides) => [...Array(sides).keys()]
 
 const easeOutBezier = BezierEasing(0.32, 0, 0.15, 1);
 const easeOut = p => easeOutBezier(p);
+const easeOutQuart = (t) => 1 - (--t) * t * t * t;
 
 export function drawShape(ctx, progress, options) {
   if (!ctx) {
@@ -37,9 +38,11 @@ export function drawShape(ctx, progress, options) {
   let drawingProgress = easeOut(Math.max(0, Math.min(1, progress)));
   let beforeDrawingProgress = 0;
   if (progress < 0) {
-    // 2 + progress makes sure beforeDrawingProgress is twice as fast as
+    // 2 * progress makes sure beforeDrawingProgress is twice as fast as
     // the time that it takes to draw the shape (quicker fade in)
-    beforeDrawingProgress = easeOut(Math.max(0, Math.min(1, - 2 * progress)));
+    beforeDrawingProgress = easeOutQuart(Math.max(0, Math.min(1,
+      - 8 * progress - 0.6
+    )));
   }
   let afterDrawingProgress = 0;
   if (progress > 1) {
