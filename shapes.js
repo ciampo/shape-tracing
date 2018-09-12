@@ -155,12 +155,159 @@ export function drawShape(ctx, progress, options) {
   ctx.restore();
 }
 
+const shapeDotsCombinations = {
+  // Circle combinations
+  0: [
+    [{antiClockwise: true}],
+    [{antiClockwise: false}],
+    [{antiClockwise: false}, {antiClockwise: true}],
+    [{antiClockwise: true}, {antiClockwise: true}],
+    [{antiClockwise: false}, {antiClockwise: false}],
+    [{antiClockwise: false}, {antiClockwise: false}, {antiClockwise: false}],
+    [{antiClockwise: true}, {antiClockwise: true}, {antiClockwise: true}],
+    [{antiClockwise: false}, {antiClockwise: true}, {antiClockwise: true}],
+    [{antiClockwise: false}, {antiClockwise: false}, {antiClockwise: true}],
+  ],
+  // Square combinations
+  4: [
+    [
+      {from: 0, direction: +1},
+      {from: 1, direction: +1},
+      {from: 2, direction: +1},
+      {from: 3, direction: +1},
+    ],
+    [
+      {from: 0, direction: -1},
+      {from: 1, direction: -1},
+      {from: 2, direction: -1},
+      {from: 3, direction: -1},
+    ],
+    [
+      {from: 0, direction: -1},
+      {from: 0, direction: +1},
+      {from: 2, direction: -1},
+      {from: 2, direction: +1},
+    ],
+    [
+      {from: 0, direction: -1},
+      {from: 0, direction: +2},
+      {from: 2, direction: +1},
+    ],
+    [
+      {from: 0, direction: -2},
+      {from: 0, direction: +1},
+      {from: 2, direction: -1},
+    ],
+    [
+      {from: 0, direction: -2},
+      {from: 0, direction: +2},
+    ],
+    [
+      {from: 0, direction: +2},
+      {from: 0, direction: -2},
+    ],
+    [
+      {from: 0, direction: +2},
+      {from: 2, direction: +2},
+    ],
+    [
+      {from: 0, direction: -2},
+      {from: 2, direction: -2},
+    ],
+  ],
+  // Hexagon combinations
+  6: [
+    [
+      { from: 1, direction: -1, },
+      { from: 1, direction: +1, },
+      { from: 3, direction: -1, },
+      { from: 4, direction: -1, },
+      { from: 4, direction: +2, },
+    ],
+    [
+      { from: 1, direction: -1, },
+      { from: 1, direction: +1, },
+      { from: 5, direction: +1, },
+      { from: 4, direction: +1, },
+      { from: 4, direction: -2, },
+    ],
+    [
+      { from: 0, direction: -1, },
+      { from: 0, direction: +3, },
+      { from: 4, direction: -1, },
+      { from: 4, direction: +1, },
+    ],
+    [
+      { from: 0, direction: -3, },
+      { from: 0, direction: +1, },
+      { from: 2, direction: -1, },
+      { from: 2, direction: +1, },
+    ],
+    [
+      { from: 0, direction: -1, },
+      { from: 0, direction: +1, },
+      { from: 2, direction: -1, },
+      { from: 2, direction: +1, },
+      { from: 4, direction: -1, },
+      { from: 4, direction: +1, },
+    ],
+    [
+      { from: 0, direction: +2, },
+      { from: 2, direction: +2, },
+      { from: 4, direction: +2, },
+    ],
+    [
+      { from: 0, direction: -2, },
+      { from: 2, direction: -2, },
+      { from: 4, direction: -2, },
+    ],
+  ],
+  // Octagon combinations
+  8: [
+    [
+      { from: 1, direction: -1, },
+      { from: 1, direction: +1, },
+      { from: 2, direction: +3, },
+      { from: 5, direction: +3, },
+    ],
+    [
+      { from: 2, direction: -2, },
+      { from: 2, direction: +1, },
+      { from: 3, direction: +3, },
+      { from: 6, direction: +2, },
+    ],
+    [
+      { from: 6, direction: +2, },
+      { from: 6, direction: -1, },
+      { from: 5, direction: -3, },
+      { from: 2, direction: -2, },
+    ],
+    [
+      { from: 0, direction: +2, },
+      { from: 0, direction: -2, },
+      { from: 4, direction: +2, },
+      { from: 4, direction: -2, },
+    ],
+    [
+      { from: 0, direction: +1, },
+      { from: 0, direction: -1, },
+      { from: 2, direction: +1, },
+      { from: 2, direction: -1, },
+      { from: 4, direction: +1, },
+      { from: 4, direction: -1, },
+      { from: 6, direction: +1, },
+      { from: 6, direction: -1, },
+    ],
+  ],
+}
+
 
 export function generateRandomShape(center, radius, vetoSides = -1) {
-  // Possible values: 0 - 3 - 4 - 5 - 6 - 7 - 8 - 9 - 10.
+  // Possible values: 0 - 4 - 6 - 8.
   let sides = -1;
+  const maxSides = 8;
   while(sides < 0 ||
-        sides > 8 ||
+        sides > maxSides ||
         sides === 2 ||
         sides % 2 !== 0 ||
         sides === vetoSides
@@ -176,16 +323,9 @@ export function generateRandomShape(center, radius, vetoSides = -1) {
     startAngle: Math.PI / (sides || 1) * Math.floor(Math.random() * (sides + 1)),
   };
 
-  if (sides === 0) {
-    toReturn.dots = [];
-
-    const howManyDots = 1 + Math.floor(Math.random() * 4)
-    for (let i = 0; i < howManyDots; i++) {
-      toReturn.dots.push({
-        antiClockwise: Math.random() > 0.5
-      });
-    }
-
+  if (shapeDotsCombinations[sides]) {
+    const combinations = shapeDotsCombinations[sides];
+    toReturn.dots = combinations[Math.floor(Math.random() * combinations.length)];
   } else {
     toReturn.dots = computeDefaultDots(sides);
   }
