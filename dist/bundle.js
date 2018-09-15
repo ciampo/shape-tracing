@@ -590,7 +590,6 @@ function generateRandomShape(center, radius, vetoSides = []) {
   ) {
     sides = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__utils_js__["a" /* randomIntFromZeroTo */])(maxSides);
   }
-  sides = 8;
 
   // Add/subtract a random amount to the radius.
   const outerRadius = radius +

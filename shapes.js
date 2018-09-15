@@ -344,7 +344,6 @@ export function generateRandomShape(center, radius, vetoSides = []) {
   ) {
     sides = randomIntFromZeroTo(maxSides);
   }
-  sides = 8;
 
   // Add/subtract a random amount to the radius.
   const outerRadius = radius +
