@@ -40,3 +40,9 @@ export function stepEasing(n, t = 0.5) {
   const rest = Math.floor(n);
   return rest + Math.min(1, (n - rest) / t);
 }
+
+export const _360deg = 2 * Math.PI;
+
+export function randomIntFromZeroTo(upperBound) {
+  return Math.floor(Math.random() * (upperBound + 1));
+}

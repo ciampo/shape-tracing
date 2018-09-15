@@ -60,93 +60,17 @@ export default class Sketch {
 
     // 70% of vmin
     const radius = Math.round(Math.min(screenCenter.x, screenCenter.y) * 0.7);
-    // add a random ±10%
-    const radiusRandomness = this._radiusRandomVariationPerc *
-      (Math.round(Math.random() * 2 * radius) - radius);
 
     const shapesLength = this.shapes.length;
-    const prevSides = shapesLength > 0 && this.shapes[shapesLength - 1].sides;
+    const vetoSides = [];
+    if (shapesLength > 0) {
+      vetoSides.push(this.shapes[shapesLength - 1].sides);
+    }
+    if (shapesLength > 1) {
+      vetoSides.push(this.shapes[shapesLength - 2].sides);
+    }
 
-    this.shapes.push(generateRandomShape(
-      screenCenter, radius + radiusRandomness, prevSides));
-
-    // return [
-    //   {
-    //     cX: screenCenter.x,
-    //     cY: screenCenter.y,
-    //     outerRadius,
-    //     sides: 4,
-    //     startAngle: Math.PI / 4,
-    //     dots: [
-    //       { from: 0, direction: +1, },
-    //       { from: 1, direction: +1, },
-    //       { from: 2, direction: +1, },
-    //       { from: 3, direction: +1, },
-    //     ],
-    //   },
-    //   {
-    //     cX: screenCenter.x,
-    //     cY: screenCenter.y,
-    //     outerRadius,
-    //     sides: 8,
-    //     startAngle: Math.PI / 8 * 3,
-    //     dots: [
-    //       { from: 1, direction: -1, },
-    //       { from: 1, direction: +1, },
-    //       { from: 2, direction: +3, },
-    //       { from: 5, direction: +3, },
-    //     ],
-    //   },
-    //   {
-    //     cX: screenCenter.x,
-    //     cY: screenCenter.y,
-    //     outerRadius,
-    //     sides: 4,
-    //     startAngle: Math.PI / 2,
-    //     dots: [
-    //       { from: 0, direction: +1, },
-    //       { from: 0, direction: -1, },
-    //       { from: 2, direction: +1, },
-    //       { from: 2, direction: -1, },
-    //     ],
-    //   },
-    //   {
-    //     cX: screenCenter.x,
-    //     cY: screenCenter.y,
-    //     outerRadius,
-    //     sides: 6,
-    //     dots: [
-    //       { from: 1, direction: -1, },
-    //       { from: 1, direction: +1, },
-    //       { from: 3, direction: -1, },
-    //       { from: 4, direction: -1, },
-    //       { from: 4, direction: +2, },
-    //     ],
-    //   },
-    //   {
-    //     cX: screenCenter.x,
-    //     cY: screenCenter.y,
-    //     outerRadius,
-    //     sides: 0,
-    //     startAngle: Math.PI / 2,
-    //     dots: [
-    //       {antiClockwise: true},
-    //     ],
-    //   },
-    //   {
-    //     cX: screenCenter.x,
-    //     cY: screenCenter.y,
-    //     outerRadius,
-    //     sides: 8,
-    //     startAngle: Math.PI / 8 * 3,
-    //     dots: [
-    //       { from: 2, direction: -2, },
-    //       { from: 2, direction: +1, },
-    //       { from: 3, direction: +3, },
-    //       { from: 6, direction: +2, },
-    //     ],
-    //   },
-    // ]
+    this.shapes.push(generateRandomShape(screenCenter, radius, vetoSides));
   }
 
   startDrawing() {

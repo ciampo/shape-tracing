@@ -1,3 +1,5 @@
+import { _360deg, randomIntFromZeroTo } from './utils.js';
+
 const defaultOptions = {
   cX: 0,
   cY: 0,
@@ -289,6 +291,12 @@ const shapeDotsCombinations = {
       { from: 4, direction: -2, },
     ],
     [
+      { from: 1, direction: +2, },
+      { from: 1, direction: -2, },
+      { from: 5, direction: +2, },
+      { from: 5, direction: -2, },
+    ],
+    [
       { from: 0, direction: +1, },
       { from: 0, direction: -1, },
       { from: 2, direction: +1, },
@@ -298,38 +306,80 @@ const shapeDotsCombinations = {
       { from: 6, direction: +1, },
       { from: 6, direction: -1, },
     ],
+    [
+      { from: 1, direction: +1, },
+      { from: 1, direction: -1, },
+      { from: 3, direction: +1, },
+      { from: 3, direction: -1, },
+      { from: 5, direction: +1, },
+      { from: 5, direction: -1, },
+      { from: 7, direction: +1, },
+      { from: 7, direction: -1, },
+    ],
+    [
+      { from: 0, direction: +3, },
+      { from: 0, direction: -3, },
+      { from: 3, direction: +1, },
+      { from: 4, direction: +1, },
+    ],
+    [
+      { from: 0, direction: +3, },
+      { from: 0, direction: -3, },
+      { from: 4, direction: -1, },
+      { from: 5, direction: -1, },
+    ],
   ],
 }
 
 
-export function generateRandomShape(center, radius, vetoSides = -1) {
-  // Possible values: 0 - 4 - 6 - 8.
+export function generateRandomShape(center, radius, vetoSides = []) {
+  // Pick only even numbers between 4 and [maxSides], plus 0 (aka a circle).
   let sides = -1;
   const maxSides = 8;
   while(sides < 0 ||
         sides > maxSides ||
         sides === 2 ||
         sides % 2 !== 0 ||
-        sides === vetoSides
+        vetoSides.includes(sides)
   ) {
-    sides = Math.floor(Math.random() * 11);
+    sides = randomIntFromZeroTo(maxSides);
+  }
+  sides = 8;
+
+  // Add/subtract a random amount to the radius.
+  const outerRadius = radius +
+    0.3 * (Math.round(Math.random() * 2 * radius) - radius);
+
+  let startAngle;
+  if (sides === 0) {
+    startAngle = _360deg / 4 * randomIntFromZeroTo(3);
+  } else {
+    let randomAngleMult = randomIntFromZeroTo(sides - 1);
+    // Make octagon always have a flat horizontal edge.
+    if (sides === 8 && randomAngleMult % 2 === 0) {
+      randomAngleMult -= 1;
+    }
+
+    startAngle = _360deg / (2 * sides) * randomAngleMult;
   }
 
-  const toReturn = {
+  let dots;
+  if (shapeDotsCombinations[sides]) {
+    // Get all possible combinations for this amount of dots
+    const combinations = shapeDotsCombinations[sides];
+    // Pick a random combination.
+    dots = combinations[randomIntFromZeroTo(combinations.length - 1)];
+  } else {
+    dots = computeDefaultDots(sides);
+  }
+
+  return {
     cX: center.x,
     cY: center.y,
-    outerRadius: radius,
+    outerRadius,
     sides,
-    startAngle: Math.PI / (sides || 1) * Math.floor(Math.random() * (sides + 1)),
+    startAngle,
+    dots,
   };
-
-  if (shapeDotsCombinations[sides]) {
-    const combinations = shapeDotsCombinations[sides];
-    toReturn.dots = combinations[Math.floor(Math.random() * combinations.length)];
-  } else {
-    toReturn.dots = computeDefaultDots(sides);
-  }
-
-  return toReturn;
 }
 
