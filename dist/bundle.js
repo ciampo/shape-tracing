@@ -262,6 +262,19 @@ const computeDefaultDots = (sides) => [...Array(sides).keys()]
 const easeOutBezier = BezierEasing(0.32, 0, 0.15, 1);
 const easeOut = p => easeOutBezier(p);
 const easeOutQuart = (t) => 1 - (--t) * t * t * t;
+const easeOutQuint = (t) => 1 + (--t) * t * t * t * t;
+
+const computeDotScaleUpSize = (dotSize, progress, dotIndex, numDots) => {
+  const staggerStep = 0.3 / numDots;
+  const scaleSpeed = 4;
+
+  // [progress] is assumed to be negative at this point.
+  const dotDrawingProgress = easeOutQuint(Math.max(0, Math.min(1,
+    scaleSpeed * (progress + 0.5 - dotIndex * staggerStep)
+  )));
+
+  return dotDrawingProgress * dotSize;
+};
 
 function drawShape(ctx, progress, options) {
   if (!ctx) {
@@ -283,31 +296,22 @@ function drawShape(ctx, progress, options) {
     return;
   }
 
-  let drawingProgress = easeOut(Math.max(0, Math.min(1, progress)));
-  let beforeDrawingProgress = 0;
-  if (progress < 0) {
-    // 2 * progress makes sure beforeDrawingProgress is twice as fast as
-    // the time that it takes to draw the shape (quicker fade in)
-    beforeDrawingProgress = easeOutQuart(Math.max(0, Math.min(1,
-      - 8 * progress - 0.6
-    )));
-  }
-  let afterDrawingProgress = 0;
-  if (progress > 1) {
-    // progress / 2 makes sure afterDrawingProgress takes twice as long as
-    // the time that it takes to draw the shape (smoother fade out)
-    afterDrawingProgress = easeOut(Math.max(0, Math.min(1, (progress - 1) / 2)));
-  }
+  // Used to draw the shape
+  const drawingProgress = easeOut(Math.max(0, Math.min(1, progress)));
 
-  const dotRadius = beforeDrawingProgress > 0 ?
-    dotSize * (1 - beforeDrawingProgress) :
-    dotSize * (1 - drawingProgress);
+  // Used to make the shape scale up / fade out after it's been drawn.
+  // [(progress - 1) / 2] makes sure afterDrawingProgress takes twice as long as
+  // the time that it takes to draw the shape (smoother fade out)
+  const afterDrawingProgress =
+    easeOut(Math.max(0, Math.min(1, (progress - 1) / 2)));
+  const shapeScale = 1 + 1.5 * afterDrawingProgress;
+  const shapeAlpha = 1 - afterDrawingProgress;
 
   ctx.save();
   ctx.translate(Math.round(cX), Math.round(cY));
   ctx.rotate(startAngle);
-  ctx.scale(1 + 1.5 * afterDrawingProgress, 1 + 1.5 * afterDrawingProgress);
-  ctx.globalAlpha = 1 - afterDrawingProgress;
+  ctx.scale(shapeScale, shapeScale);
+  ctx.globalAlpha = shapeAlpha;
   ctx.lineWidth = 1;
 
   if (sides === 0) {
@@ -328,6 +332,11 @@ function drawShape(ctx, progress, options) {
         y: outerRadius * Math.sin(offsetAngle + progressAngle),
       };
 
+      // Compute dot size
+      const dotRadius = progress > 0 ?
+        dotSize * (1 - drawingProgress) :
+        computeDotScaleUpSize(dotSize, progress, dotIndex, dots.length);
+
       // Draw arc.
       ctx.beginPath();
       ctx.moveTo(pArcStart.x, pArcStart.y);
@@ -346,7 +355,7 @@ function drawShape(ctx, progress, options) {
     const angleIncrement = Math.PI * 2 / sides;
     const sideLength = 2 * outerRadius * Math.sin(Math.PI / sides);
 
-    dots.forEach(({from, direction}) => {
+    dots.forEach(({from, direction}, dotIndex) => {
       if (direction === 0) {
         return;
       }
@@ -384,6 +393,11 @@ function drawShape(ctx, progress, options) {
         x: pSideStart.x + (pSideEnd.x - pSideStart.x) * sideProgress,
         y: pSideStart.y + (pSideEnd.y - pSideStart.y) * sideProgress,
       };
+
+      // Compute dot size
+      const dotRadius = progress > 0 ?
+        dotSize * (1 - drawingProgress) :
+        computeDotScaleUpSize(dotSize, progress, dotIndex, dots.length);
 
       // Draw line (simulate progress through a dashed line).
       ctx.beginPath();
