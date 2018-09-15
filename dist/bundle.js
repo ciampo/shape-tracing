@@ -100,7 +100,9 @@ class Sketch {
     this._animCounter = 0;
     this._animCounterShapeDuration = 180;
     this._animCounterShapeOffset =
-      Math.round(this._animCounterShapeDuration * 0.75);
+      Math.round(this._animCounterShapeDuration * 0.5);
+
+    this._radiusRandomVariationPerc = 0.2;
 
     this.onResize();
 
@@ -129,90 +131,20 @@ class Sketch {
       x: this._viewportSize.w / 2,
       y: this._viewportSize.h / 2,
     };
-    const outerRadius = Math.round(Math.min(screenCenter.x, screenCenter.y) * 0.7);
+
+    // 70% of vmin
+    const radius = Math.round(Math.min(screenCenter.x, screenCenter.y) * 0.7);
 
     const shapesLength = this.shapes.length;
-    const prevSides = shapesLength > 0 && this.shapes[shapesLength - 1].sides;
+    const vetoSides = [];
+    if (shapesLength > 0) {
+      vetoSides.push(this.shapes[shapesLength - 1].sides);
+    }
+    if (shapesLength > 1) {
+      vetoSides.push(this.shapes[shapesLength - 2].sides);
+    }
 
-    this.shapes.push(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__shapes_js__["a" /* generateRandomShape */])(screenCenter, outerRadius, prevSides));
-
-    // return [
-    //   {
-    //     cX: screenCenter.x,
-    //     cY: screenCenter.y,
-    //     outerRadius,
-    //     sides: 4,
-    //     startAngle: Math.PI / 4,
-    //     dots: [
-    //       { from: 0, direction: +1, },
-    //       { from: 1, direction: +1, },
-    //       { from: 2, direction: +1, },
-    //       { from: 3, direction: +1, },
-    //     ],
-    //   },
-    //   {
-    //     cX: screenCenter.x,
-    //     cY: screenCenter.y,
-    //     outerRadius,
-    //     sides: 8,
-    //     startAngle: Math.PI / 8 * 3,
-    //     dots: [
-    //       { from: 1, direction: -1, },
-    //       { from: 1, direction: +1, },
-    //       { from: 2, direction: +3, },
-    //       { from: 5, direction: +3, },
-    //     ],
-    //   },
-    //   {
-    //     cX: screenCenter.x,
-    //     cY: screenCenter.y,
-    //     outerRadius,
-    //     sides: 4,
-    //     startAngle: Math.PI / 2,
-    //     dots: [
-    //       { from: 0, direction: +1, },
-    //       { from: 0, direction: -1, },
-    //       { from: 2, direction: +1, },
-    //       { from: 2, direction: -1, },
-    //     ],
-    //   },
-    //   {
-    //     cX: screenCenter.x,
-    //     cY: screenCenter.y,
-    //     outerRadius,
-    //     sides: 6,
-    //     dots: [
-    //       { from: 1, direction: -1, },
-    //       { from: 1, direction: +1, },
-    //       { from: 3, direction: -1, },
-    //       { from: 4, direction: -1, },
-    //       { from: 4, direction: +2, },
-    //     ],
-    //   },
-    //   {
-    //     cX: screenCenter.x,
-    //     cY: screenCenter.y,
-    //     outerRadius,
-    //     sides: 0,
-    //     startAngle: Math.PI / 2,
-    //     dots: [
-    //       {antiClockwise: true},
-    //     ],
-    //   },
-    //   {
-    //     cX: screenCenter.x,
-    //     cY: screenCenter.y,
-    //     outerRadius,
-    //     sides: 8,
-    //     startAngle: Math.PI / 8 * 3,
-    //     dots: [
-    //       { from: 2, direction: -2, },
-    //       { from: 2, direction: +1, },
-    //       { from: 3, direction: +3, },
-    //       { from: 6, direction: +2, },
-    //     ],
-    //   },
-    // ]
+    this.shapes.push(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__shapes_js__["a" /* generateRandomShape */])(screenCenter, radius, vetoSides));
   }
 
   startDrawing() {
@@ -311,6 +243,9 @@ start();
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["b"] = drawShape;
 /* harmony export (immutable) */ __webpack_exports__["a"] = generateRandomShape;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_js__ = __webpack_require__(3);
+
+
 const defaultOptions = {
   cX: 0,
   cY: 0,
@@ -326,6 +261,7 @@ const computeDefaultDots = (sides) => [...Array(sides).keys()]
 
 const easeOutBezier = BezierEasing(0.32, 0, 0.15, 1);
 const easeOut = p => easeOutBezier(p);
+const easeOutQuart = (t) => 1 - (--t) * t * t * t;
 
 function drawShape(ctx, progress, options) {
   if (!ctx) {
@@ -350,9 +286,11 @@ function drawShape(ctx, progress, options) {
   let drawingProgress = easeOut(Math.max(0, Math.min(1, progress)));
   let beforeDrawingProgress = 0;
   if (progress < 0) {
-    // 2 + progress makes sure beforeDrawingProgress is twice as fast as
+    // 2 * progress makes sure beforeDrawingProgress is twice as fast as
     // the time that it takes to draw the shape (quicker fade in)
-    beforeDrawingProgress = easeOut(Math.max(0, Math.min(1, - 2 * progress)));
+    beforeDrawingProgress = easeOutQuart(Math.max(0, Math.min(1,
+      - 8 * progress - 0.6
+    )));
   }
   let afterDrawingProgress = 0;
   if (progress > 1) {
@@ -465,44 +403,297 @@ function drawShape(ctx, progress, options) {
   ctx.restore();
 }
 
-
-function generateRandomShape(center, radius, vetoSides = -1) {
-  // Possible values: 0 - 3 - 4 - 5 - 6 - 7 - 8 - 9 - 10.
-  let sides = -1;
-  while(sides < 0 ||
-        sides > 8 ||
-        sides === 2 ||
-        sides % 2 !== 0 ||
-        sides === vetoSides
-  ) {
-    sides = Math.floor(Math.random() * 11);
-  }
-
-  const toReturn = {
-    cX: center.x,
-    cY: center.y,
-    outerRadius: radius,
-    sides,
-    startAngle: Math.PI / (sides || 1) * Math.floor(Math.random() * (sides + 1)),
-  };
-
-  if (sides === 0) {
-    toReturn.dots = [];
-
-    const howManyDots = 1 + Math.floor(Math.random() * 4)
-    for (let i = 0; i < howManyDots; i++) {
-      toReturn.dots.push({
-        antiClockwise: Math.random() > 0.5
-      });
-    }
-
-  } else {
-    toReturn.dots = computeDefaultDots(sides);
-  }
-
-  return toReturn;
+const shapeDotsCombinations = {
+  // Circle combinations
+  0: [
+    [{antiClockwise: true}],
+    [{antiClockwise: false}],
+    [{antiClockwise: false}, {antiClockwise: true}],
+    [{antiClockwise: true}, {antiClockwise: true}],
+    [{antiClockwise: false}, {antiClockwise: false}],
+    [{antiClockwise: false}, {antiClockwise: false}, {antiClockwise: false}],
+    [{antiClockwise: true}, {antiClockwise: true}, {antiClockwise: true}],
+    [{antiClockwise: false}, {antiClockwise: true}, {antiClockwise: true}],
+    [{antiClockwise: false}, {antiClockwise: false}, {antiClockwise: true}],
+  ],
+  // Square combinations
+  4: [
+    [
+      {from: 0, direction: +1},
+      {from: 1, direction: +1},
+      {from: 2, direction: +1},
+      {from: 3, direction: +1},
+    ],
+    [
+      {from: 0, direction: -1},
+      {from: 1, direction: -1},
+      {from: 2, direction: -1},
+      {from: 3, direction: -1},
+    ],
+    [
+      {from: 0, direction: -1},
+      {from: 0, direction: +1},
+      {from: 2, direction: -1},
+      {from: 2, direction: +1},
+    ],
+    [
+      {from: 0, direction: -1},
+      {from: 0, direction: +2},
+      {from: 2, direction: +1},
+    ],
+    [
+      {from: 0, direction: -2},
+      {from: 0, direction: +1},
+      {from: 2, direction: -1},
+    ],
+    [
+      {from: 0, direction: -2},
+      {from: 0, direction: +2},
+    ],
+    [
+      {from: 0, direction: +2},
+      {from: 0, direction: -2},
+    ],
+    [
+      {from: 0, direction: +2},
+      {from: 2, direction: +2},
+    ],
+    [
+      {from: 0, direction: -2},
+      {from: 2, direction: -2},
+    ],
+  ],
+  // Hexagon combinations
+  6: [
+    [
+      { from: 1, direction: -1, },
+      { from: 1, direction: +1, },
+      { from: 3, direction: -1, },
+      { from: 4, direction: -1, },
+      { from: 4, direction: +2, },
+    ],
+    [
+      { from: 1, direction: -1, },
+      { from: 1, direction: +1, },
+      { from: 5, direction: +1, },
+      { from: 4, direction: +1, },
+      { from: 4, direction: -2, },
+    ],
+    [
+      { from: 0, direction: -1, },
+      { from: 0, direction: +3, },
+      { from: 4, direction: -1, },
+      { from: 4, direction: +1, },
+    ],
+    [
+      { from: 0, direction: -3, },
+      { from: 0, direction: +1, },
+      { from: 2, direction: -1, },
+      { from: 2, direction: +1, },
+    ],
+    [
+      { from: 0, direction: -1, },
+      { from: 0, direction: +1, },
+      { from: 2, direction: -1, },
+      { from: 2, direction: +1, },
+      { from: 4, direction: -1, },
+      { from: 4, direction: +1, },
+    ],
+    [
+      { from: 0, direction: +2, },
+      { from: 2, direction: +2, },
+      { from: 4, direction: +2, },
+    ],
+    [
+      { from: 0, direction: -2, },
+      { from: 2, direction: -2, },
+      { from: 4, direction: -2, },
+    ],
+  ],
+  // Octagon combinations
+  8: [
+    [
+      { from: 1, direction: -1, },
+      { from: 1, direction: +1, },
+      { from: 2, direction: +3, },
+      { from: 5, direction: +3, },
+    ],
+    [
+      { from: 2, direction: -2, },
+      { from: 2, direction: +1, },
+      { from: 3, direction: +3, },
+      { from: 6, direction: +2, },
+    ],
+    [
+      { from: 6, direction: +2, },
+      { from: 6, direction: -1, },
+      { from: 5, direction: -3, },
+      { from: 2, direction: -2, },
+    ],
+    [
+      { from: 0, direction: +2, },
+      { from: 0, direction: -2, },
+      { from: 4, direction: +2, },
+      { from: 4, direction: -2, },
+    ],
+    [
+      { from: 1, direction: +2, },
+      { from: 1, direction: -2, },
+      { from: 5, direction: +2, },
+      { from: 5, direction: -2, },
+    ],
+    [
+      { from: 0, direction: +1, },
+      { from: 0, direction: -1, },
+      { from: 2, direction: +1, },
+      { from: 2, direction: -1, },
+      { from: 4, direction: +1, },
+      { from: 4, direction: -1, },
+      { from: 6, direction: +1, },
+      { from: 6, direction: -1, },
+    ],
+    [
+      { from: 1, direction: +1, },
+      { from: 1, direction: -1, },
+      { from: 3, direction: +1, },
+      { from: 3, direction: -1, },
+      { from: 5, direction: +1, },
+      { from: 5, direction: -1, },
+      { from: 7, direction: +1, },
+      { from: 7, direction: -1, },
+    ],
+    [
+      { from: 0, direction: +3, },
+      { from: 0, direction: -3, },
+      { from: 3, direction: +1, },
+      { from: 4, direction: +1, },
+    ],
+    [
+      { from: 0, direction: +3, },
+      { from: 0, direction: -3, },
+      { from: 4, direction: -1, },
+      { from: 5, direction: -1, },
+    ],
+  ],
 }
 
+
+function generateRandomShape(center, radius, vetoSides = []) {
+  // Pick only even numbers between 4 and [maxSides], plus 0 (aka a circle).
+  let sides = -1;
+  const maxSides = 8;
+  while(sides < 0 ||
+        sides > maxSides ||
+        sides === 2 ||
+        sides % 2 !== 0 ||
+        vetoSides.includes(sides)
+  ) {
+    sides = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__utils_js__["a" /* randomIntFromZeroTo */])(maxSides);
+  }
+  sides = 8;
+
+  // Add/subtract a random amount to the radius.
+  const outerRadius = radius +
+    0.3 * (Math.round(Math.random() * 2 * radius) - radius);
+
+  let startAngle;
+  if (sides === 0) {
+    startAngle = __WEBPACK_IMPORTED_MODULE_0__utils_js__["b" /* _360deg */] / 4 * __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__utils_js__["a" /* randomIntFromZeroTo */])(3);
+  } else {
+    let randomAngleMult = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__utils_js__["a" /* randomIntFromZeroTo */])(sides - 1);
+    // Make octagon always have a flat horizontal edge.
+    if (sides === 8 && randomAngleMult % 2 === 0) {
+      randomAngleMult -= 1;
+    }
+
+    startAngle = __WEBPACK_IMPORTED_MODULE_0__utils_js__["b" /* _360deg */] / (2 * sides) * randomAngleMult;
+  }
+
+  let dots;
+  if (shapeDotsCombinations[sides]) {
+    // Get all possible combinations for this amount of dots
+    const combinations = shapeDotsCombinations[sides];
+    // Pick a random combination.
+    dots = combinations[__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__utils_js__["a" /* randomIntFromZeroTo */])(combinations.length - 1)];
+  } else {
+    dots = computeDefaultDots(sides);
+  }
+
+  return {
+    cX: center.x,
+    cY: center.y,
+    outerRadius,
+    sides,
+    startAngle,
+    dots,
+  };
+}
+
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* unused harmony export getMouseCoordinates */
+/* unused harmony export getDistance2d */
+/* unused harmony export absMax */
+/* unused harmony export createCanvasFullScreenBCR */
+/* unused harmony export getAngleBetweenPoints */
+/* unused harmony export bitwiseRound */
+/* unused harmony export stepEasing */
+/* harmony export (immutable) */ __webpack_exports__["a"] = randomIntFromZeroTo;
+function getMouseCoordinates(evt, canvasBCR, devicePxRatio = 1) {
+  let toReturn = {};
+
+  toReturn.x = Math.round(((evt.clientX * devicePxRatio) - canvasBCR.left) /
+      (canvasBCR.right - canvasBCR.left) * canvasBCR.width);
+  toReturn.y = Math.round(((evt.clientY * devicePxRatio) - canvasBCR.top) /
+    (canvasBCR.bottom - canvasBCR.top) * canvasBCR.height);
+
+  return toReturn;
+};
+
+function getDistance2d(x1, y1, x2, y2) {
+  return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+};
+
+function absMax(x, y) {
+  return Math.max(Math.abs(x), Math.abs(y));
+};
+
+function createCanvasFullScreenBCR(canvas) {
+  return {
+    top: 0,
+    right: canvas.width,
+    bottom: canvas.height,
+    left: 0,
+    width: canvas.width,
+    height: canvas.height
+  };
+};
+
+function getAngleBetweenPoints(x1, y1, x2, y2) {
+  return Math.atan2(y2 - y1, x2 - x1);
+}
+
+function bitwiseRound(n) {
+  return (0.5 + n) << 0;
+}
+
+function stepEasing(n, t = 0.5) {
+  const rest = Math.floor(n);
+  return rest + Math.min(1, (n - rest) / t);
+}
+
+const _360deg = 2 * Math.PI;
+/* harmony export (immutable) */ __webpack_exports__["b"] = _360deg;
+
+
+function randomIntFromZeroTo(upperBound) {
+  return Math.floor(Math.random() * (upperBound + 1));
+}
 
 
 /***/ })
