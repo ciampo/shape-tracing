@@ -24,7 +24,7 @@ export default class Sketch {
 
     this._animActive = true;
     this._animCounter = 0;
-    this._animCounterShapeDuration = 180;
+    this._animCounterShapeDuration = 200;
     this._animCounterShapeOffset =
       Math.round(this._animCounterShapeDuration * 0.5);
 
@@ -58,8 +58,8 @@ export default class Sketch {
       y: this._viewportSize.h / 2,
     };
 
-    // 70% of vmin
-    const radius = Math.round(Math.min(screenCenter.x, screenCenter.y) * 0.7);
+    // 60% of vmin
+    const radius = Math.round(Math.min(screenCenter.x, screenCenter.y) * 0.6);
 
     const shapesLength = this.shapes.length;
     const vetoSides = [];
@@ -70,7 +70,11 @@ export default class Sketch {
       vetoSides.push(this.shapes[shapesLength - 2].sides);
     }
 
-    this.shapes.push(generateRandomShape(screenCenter, radius, vetoSides));
+    const previousRadius = shapesLength > 0 ?
+    this.shapes[shapesLength - 1].outerRadius : 0;
+
+    this.shapes.push(generateRandomShape(screenCenter, radius,
+      previousRadius, vetoSides));
   }
 
   startDrawing() {
