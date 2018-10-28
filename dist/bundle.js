@@ -98,7 +98,7 @@ class Sketch {
 
     this._animActive = true;
     this._animCounter = 0;
-    this._animCounterShapeDuration = 180;
+    this._animCounterShapeDuration = 200;
     this._animCounterShapeOffset =
       Math.round(this._animCounterShapeDuration * 0.5);
 
@@ -132,8 +132,8 @@ class Sketch {
       y: this._viewportSize.h / 2,
     };
 
-    // 70% of vmin
-    const radius = Math.round(Math.min(screenCenter.x, screenCenter.y) * 0.7);
+    // 60% of vmin
+    const radius = Math.round(Math.min(screenCenter.x, screenCenter.y) * 0.6);
 
     const shapesLength = this.shapes.length;
     const vetoSides = [];
@@ -144,7 +144,11 @@ class Sketch {
       vetoSides.push(this.shapes[shapesLength - 2].sides);
     }
 
-    this.shapes.push(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__shapes_js__["a" /* generateRandomShape */])(screenCenter, radius, vetoSides));
+    const previousRadius = shapesLength > 0 ?
+    this.shapes[shapesLength - 1].outerRadius : 0;
+
+    this.shapes.push(__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__shapes_js__["a" /* generateRandomShape */])(screenCenter, radius,
+      previousRadius, vetoSides));
   }
 
   startDrawing() {
@@ -299,13 +303,22 @@ function drawShape(ctx, progress, options) {
   // Used to draw the shape
   const drawingProgress = easeOut(Math.max(0, Math.min(1, progress)));
 
-  // Used to make the shape scale up / fade out after it's been drawn.
-  // [(progress - 1) / 2] makes sure afterDrawingProgress takes twice as long as
-  // the time that it takes to draw the shape (smoother fade out)
-  const afterDrawingProgress =
-    easeOut(Math.max(0, Math.min(1, (progress - 1) / 2)));
-  const shapeScale = 1 + 1.5 * afterDrawingProgress;
-  const shapeAlpha = 1 - afterDrawingProgress;
+  // Used to make the shape scale up.
+  // the "/ 1.5" makes the scale animation takes 1.5 times as long as
+  // the time that it takes to draw the shape.
+  // The 1.5 multiplier amplifies the scale effect by 150%, thus making the shape
+  // grow to 250% its initial size.
+  const shapeScale = 1 + 1.5 *
+    easeOut(Math.max(0, Math.min(1, (progress - 1) / 1.5)));
+
+  // The opacity is eased with a more agressive easing, so that it becomes
+  // semi transparent almost immediately after it's been drawn.
+  const shapeAlpha = 1 - easeOutQuart(Math.max(0, Math.min(1, progress - 1)));
+
+  // No need to draw transparent shapes.
+  if (shapeAlpha <= 0) {
+    return;
+  }
 
   ctx.save();
   ctx.translate(Math.round(cX), Math.round(cY));
@@ -334,7 +347,7 @@ function drawShape(ctx, progress, options) {
 
       // Compute dot size
       const dotRadius = progress > 0 ?
-        dotSize * (1 - drawingProgress) :
+        dotSize * Math.min(1, Math.max(0, 1 - progress)) :
         computeDotScaleUpSize(dotSize, progress, dotIndex, dots.length);
 
       // Draw arc.
@@ -353,7 +366,6 @@ function drawShape(ctx, progress, options) {
   } else {
     // Regular polygon.
     const angleIncrement = Math.PI * 2 / sides;
-    const sideLength = 2 * outerRadius * Math.sin(Math.PI / sides);
 
     dots.forEach(({from, direction}, dotIndex) => {
       if (direction === 0) {
@@ -363,8 +375,8 @@ function drawShape(ctx, progress, options) {
       let sideProgress = drawingProgress * Math.abs(direction);
       let startingCorner = from;
 
+      // Draw the sides that are already completed.
       ctx.beginPath();
-      ctx.setLineDash([]);
       ctx.moveTo(
         outerRadius * Math.cos(angleIncrement * startingCorner),
         outerRadius * Math.sin(angleIncrement * startingCorner)
@@ -378,9 +390,8 @@ function drawShape(ctx, progress, options) {
         sideProgress -= 1;
         startingCorner += Math.sign(direction);
       }
-      ctx.stroke();
 
-
+      // Draw the side that is in progress.
       const pSideStart = {
         x: outerRadius * Math.cos(angleIncrement * startingCorner),
         y: outerRadius * Math.sin(angleIncrement * startingCorner),
@@ -394,17 +405,14 @@ function drawShape(ctx, progress, options) {
         y: pSideStart.y + (pSideEnd.y - pSideStart.y) * sideProgress,
       };
 
+      // Draw line for the side in progress
+      ctx.lineTo(pDot.x, pDot.y);
+      ctx.stroke();
+
       // Compute dot size
       const dotRadius = progress > 0 ?
         dotSize * (1 - drawingProgress) :
         computeDotScaleUpSize(dotSize, progress, dotIndex, dots.length);
-
-      // Draw line (simulate progress through a dashed line).
-      ctx.beginPath();
-      ctx.setLineDash([sideLength * sideProgress, sideLength]);
-      ctx.moveTo(pSideStart.x, pSideStart.y);
-      ctx.lineTo(pSideEnd.x, pSideEnd.y);
-      ctx.stroke();
 
       // Draw dot.
       ctx.beginPath();
@@ -429,6 +437,38 @@ const shapeDotsCombinations = {
     [{antiClockwise: true}, {antiClockwise: true}, {antiClockwise: true}],
     [{antiClockwise: false}, {antiClockwise: true}, {antiClockwise: true}],
     [{antiClockwise: false}, {antiClockwise: false}, {antiClockwise: true}],
+  ],
+  // Triangle combinations
+  3: [
+    [
+      {from: 0, direction: +1},
+      {from: 1, direction: +1},
+      {from: 2, direction: +1},
+    ],
+    [
+      {from: 0, direction: -1},
+      {from: 1, direction: -1},
+      {from: 2, direction: -1},
+    ],
+    [
+      {from: 0, direction: -1},
+      {from: 0, direction: +1},
+      {from: 2, direction: -1},
+    ],
+    [
+      {from: 0, direction: +2},
+      {from: 2, direction: +1},
+    ],
+    [
+      {from: 0, direction: -2},
+      {from: 2, direction: -1},
+    ],
+    [
+      {from: 0, direction: +3},
+    ],
+    [
+      {from: 0, direction: -3},
+    ],
   ],
   // Square combinations
   4: [
@@ -592,22 +632,28 @@ const shapeDotsCombinations = {
 }
 
 
-function generateRandomShape(center, radius, vetoSides = []) {
-  // Pick only even numbers between 4 and [maxSides], plus 0 (aka a circle).
+function generateRandomShape(center, radius, previousRadius, vetoSides = [],) {
   let sides = -1;
+
+  // Pick only numbers between [minSides] and [maxSides],
+  // that are not vetoes (ie. used recently in another shape).
+  // Or 0 (aka a circle).
+  let isValidSides = false;
+  const minSides = 4;
   const maxSides = 8;
-  while(sides < 0 ||
-        sides > maxSides ||
-        sides === 2 ||
-        sides % 2 !== 0 ||
-        vetoSides.includes(sides)
-  ) {
+  while (!isValidSides) {
     sides = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__utils_js__["a" /* randomIntFromZeroTo */])(maxSides);
+    isValidSides = (sides === 0 && !vetoSides.includes(sides)) ||
+      (sides >= minSides && sides <= maxSides && sides % 2 === 0 && !vetoSides.includes(sides));
   }
 
   // Add/subtract a random amount to the radius.
-  const outerRadius = radius +
-    0.3 * (Math.round(Math.random() * 2 * radius) - radius);
+  // But never too close to the previous shape (at least 30%)
+  let outerRadius = previousRadius;
+  while (Math.abs(outerRadius - previousRadius) < radius * 0.1) {
+    outerRadius = radius +
+      0.4 * (Math.round(Math.random() * 2 * radius) - radius);
+  }
 
   let startAngle;
   if (sides === 0) {
