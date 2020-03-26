@@ -1,5 +1,7 @@
 # Shape tracing
 
+[View the sketch](https://ciampo.github.io/shape-tracing/)
+
 Code experiment on 2d graphics based on the intro of the Apple video "Designed in California".
 
 ## TODO
